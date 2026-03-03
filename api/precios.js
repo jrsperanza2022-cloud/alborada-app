@@ -40,62 +40,82 @@ module.exports = async function handler(req, res) {
     } catch (e) { errors.push('stooq/' + sym + ': ' + e.message); }
   }
 
-  // ── 2. Dolar Divisa BNA via dolarapi.com ───────────────
+  // ── 2. Dolar Divisa BNA — endpoint directo ─────────────
   try {
-    const r = await fetch('https://dolarapi.com/v1/dolares', {
+    const r = await fetch('https://dolarapi.com/v1/dolares/divisas', {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000)
     });
     if (r.ok) {
-      const data = await r.json();
-      const divisa = data.find(function(d) {
-        return d.casa && (d.casa.toLowerCase() === 'divisas' || d.casa.toLowerCase() === 'divisa');
-      });
-      if (divisa && divisa.venta > 0) {
-        out.divisa_sell = divisa.venta;
-        out.divisa_buy  = divisa.compra || divisa.venta;
+      const d = await r.json();
+      if (d && d.venta > 0) {
+        out.divisa_sell = d.venta;
+        out.divisa_buy  = d.compra || d.venta;
       } else {
-        errors.push('dolarapi: divisa no encontrada en lista');
+        errors.push('dolarapi divisas: respuesta vacia o sin venta');
       }
     } else {
-      errors.push('dolarapi HTTP ' + r.status);
+      errors.push('dolarapi divisas HTTP ' + r.status);
     }
-  } catch (e) { errors.push('dolarapi: ' + e.message); }
+  } catch (e) { errors.push('dolarapi divisas: ' + e.message); }
 
-  // ── 3. Expeller via expeller.com.ar ────────────────────
+  // Fallback divisa: argentinadatos.com
+  if (!out.divisa_sell) {
+    try {
+      const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares', {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const divisa = data.find(function(d) {
+          const c = (d.casa || '').toLowerCase();
+          return c.includes('divisa');
+        });
+        if (divisa && divisa.venta > 0) {
+          out.divisa_sell = divisa.venta;
+          out.divisa_buy  = divisa.compra || divisa.venta;
+        } else {
+          errors.push('argentinadatos: divisa no encontrada');
+        }
+      }
+    } catch (e) { errors.push('argentinadatos fallback: ' + e.message); }
+  }
+
+  // ── 3. Expeller via Google Cache (HTTP bloqueado en Vercel) ──
   try {
-    const r = await fetch('http://www.expeller.com.ar/pizarra.asp', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html',
-        'Accept-Language': 'es-AR,es;q=0.9',
-      },
-      signal: AbortSignal.timeout(10000)
+    // Intentar via allorigins (proxy HTTPS que puede llegar a HTTP)
+    const target = encodeURIComponent('http://www.expeller.com.ar/pizarra.asp');
+    const r = await fetch('https://api.allorigins.win/get?url=' + target, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(12000)
     });
     if (r.ok) {
-      const html = await r.text();
+      const wrapper = await r.json();
+      const html = wrapper.contents || '';
 
       const findPrice = function(keyword) {
-        const idx = html.toLowerCase().indexOf(keyword.toLowerCase());
+        const lower = html.toLowerCase();
+        const idx = lower.indexOf(keyword.toLowerCase());
         if (idx === -1) return null;
-        const chunk = html.slice(idx, idx + 600);
-        const nums = chunk.match(/\b(\d{5,7})\b/g);
+        const chunk = html.slice(idx, idx + 800);
+        const nums = chunk.match(/\b(\d{4,7})\b/g);
         if (!nums) return null;
         for (var i = 0; i < nums.length; i++) {
           const v = parseInt(nums[i], 10);
-          if (v >= 50000 && v <= 9999999) return v;
+          if (v >= 30000 && v <= 9999999) return v;
         }
         return null;
       };
 
-      const expSoja    = findPrice('Expeller de Soja')    || findPrice('Exp.Soja')    || findPrice('Soja');
-      const expGirasol = findPrice('Expeller de Girasol') || findPrice('Exp.Girasol') || findPrice('Girasol');
+      const expSoja    = findPrice('Soja');
+      const expGirasol = findPrice('Girasol');
 
       if (expSoja)    out.expSoja    = expSoja;
       if (expGirasol) out.expGirasol = expGirasol;
-      if (!expSoja && !expGirasol) errors.push('expeller: no se encontraron precios');
+      if (!expSoja && !expGirasol) errors.push('expeller: precios no encontrados en HTML');
     } else {
-      errors.push('expeller HTTP ' + r.status);
+      errors.push('expeller proxy HTTP ' + r.status);
     }
   } catch (e) { errors.push('expeller: ' + e.message); }
 
@@ -144,3 +164,10 @@ module.exports = async function handler(req, res) {
     errors: errors.length ? errors : undefined
   });
 };
+```
+
+---
+
+**Después del commit**, antes de mirar la app, abrí esto en el browser:
+```
+https://TU-APP.vercel.app/api/precios
