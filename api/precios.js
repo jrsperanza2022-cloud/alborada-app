@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const out = {};
-  const log = [];
+  const errors = [];
 
   // ── 1. CBOT via stooq.com ──────────────────────────────
   const stooqSymbols = [
@@ -20,11 +20,11 @@ module.exports = async function handler(req, res) {
         headers: { 'User-Agent': 'Mozilla/5.0' },
         signal: AbortSignal.timeout(8000)
       });
-      if (!r.ok) { log.push('stooq/' + sym + ': HTTP ' + r.status); continue; }
+      if (!r.ok) { errors.push('stooq/' + sym + ' HTTP ' + r.status); continue; }
       const lines = (await r.text()).trim().split('\n');
-      if (lines.length < 2) { log.push('stooq/' + sym + ': vacio'); continue; }
+      if (lines.length < 2) { errors.push('stooq/' + sym + ' vacio'); continue; }
       const close = parseFloat(lines[1].split(',')[6]);
-      if (!close || close <= 0) { log.push('stooq/' + sym + ': precio invalido'); continue; }
+      if (!close || close <= 0) { errors.push('stooq/' + sym + ' sin precio'); continue; }
       if (id === '_zl') {
         const zlTon = close * 2204.62 / 100;
         out.aSC = Math.round(zlTon * 1.00);
@@ -33,120 +33,121 @@ module.exports = async function handler(req, res) {
         out.aMR = Math.round(zlTon * 0.92);
         out.aGC = Math.round(zlTon * 1.15);
         out.aGR = Math.round(zlTon * 1.20);
-        log.push('stooq/zl.f: OK close=' + close);
       } else {
         out[id] = Math.round(close * factor);
-        log.push('stooq/' + sym + ': OK ' + out[id]);
       }
-    } catch (e) { log.push('stooq/' + sym + ': ' + e.message); }
+    } catch (e) { errors.push('stooq/' + sym + ': ' + e.message); }
   }
 
   // ── 2. Dolar Divisa BNA ────────────────────────────────
-  // Intento A: endpoint directo /dolares/divisas
+  // Intento A: argentinadatos endpoint específico de divisa
   try {
-    const r = await fetch('https://dolarapi.com/v1/dolares/divisas', {
+    const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/divisa', {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000)
     });
-    const txt = await r.text();
-    log.push('dolarapi/divisas status=' + r.status + ' body=' + txt.slice(0, 200));
     if (r.ok) {
-      const d = JSON.parse(txt);
-      if (d && d.venta > 0) {
-        out.divisa_sell = d.venta;
-        out.divisa_buy  = d.compra || d.venta;
-        log.push('dolarapi/divisas OK: ' + d.venta);
-      }
-    }
-  } catch (e) { log.push('dolarapi/divisas err: ' + e.message); }
+      const d = await r.json();
+      // Devuelve array histórico — tomar el último
+      const last = Array.isArray(d) ? d[d.length - 1] : d;
+      if (last && last.venta > 0) {
+        out.divisa_sell = last.venta;
+        out.divisa_buy  = last.compra || last.venta;
+      } else { errors.push('argentinadatos/divisa: sin datos'); }
+    } else { errors.push('argentinadatos/divisa HTTP ' + r.status); }
+  } catch (e) { errors.push('argentinadatos/divisa: ' + e.message); }
 
-  // Intento B: lista completa y filtrar
+  // Intento B: scraping BNA
   if (!out.divisa_sell) {
     try {
-      const r = await fetch('https://dolarapi.com/v1/dolares', {
-        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(8000)
+      const r = await fetch('https://www.bna.com.ar/Personas', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept': 'text/html',
+          'Accept-Language': 'es-AR,es;q=0.9',
+        },
+        signal: AbortSignal.timeout(10000)
       });
-      const txt = await r.text();
-      log.push('dolarapi/lista status=' + r.status + ' body=' + txt.slice(0, 400));
       if (r.ok) {
-        const data = JSON.parse(txt);
-        // Mostrar todas las casas disponibles
-        log.push('casas: ' + data.map(function(d){ return d.casa; }).join(', '));
-        const divisa = data.find(function(d) {
-          const c = (d.casa || '').toLowerCase();
-          return c === 'divisas' || c === 'divisa' || c.includes('divis');
-        });
-        if (divisa && divisa.venta > 0) {
-          out.divisa_sell = divisa.venta;
-          out.divisa_buy  = divisa.compra || divisa.venta;
-          log.push('dolarapi lista/divisa OK: ' + divisa.venta);
-        } else {
-          log.push('dolarapi lista: divisa no encontrada entre: ' + data.map(function(d){ return d.casa; }).join(', '));
+        const html = await r.text();
+        // Busca tabla de divisas en el HTML de BNA
+        const idx = html.toLowerCase().indexOf('divisa');
+        if (idx > -1) {
+          const chunk = html.slice(idx, idx + 500);
+          const nums = chunk.match(/[\d]+[,.][\d]{2}/g);
+          if (nums && nums.length >= 2) {
+            const buy  = parseFloat(nums[0].replace(',', '.'));
+            const sell = parseFloat(nums[1].replace(',', '.'));
+            if (sell > 800 && sell < 5000) {
+              out.divisa_sell = sell;
+              out.divisa_buy  = buy;
+            }
+          }
         }
-      }
-    } catch (e) { log.push('dolarapi/lista err: ' + e.message); }
+        if (!out.divisa_sell) errors.push('BNA scraping: divisa no encontrada');
+      } else { errors.push('BNA HTTP ' + r.status); }
+    } catch (e) { errors.push('BNA scraping: ' + e.message); }
   }
 
-  // Intento C: argentinadatos
+  // Intento C: infodolar.com
   if (!out.divisa_sell) {
     try {
-      const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares', {
-        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+      const r = await fetch('https://www.infodolar.com/', {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' },
         signal: AbortSignal.timeout(8000)
       });
       if (r.ok) {
-        const data = await r.json();
-        log.push('argentinadatos casas: ' + data.map(function(d){ return d.casa; }).join(', '));
-        const divisa = data.find(function(d) {
-          return (d.casa || '').toLowerCase().includes('divis');
-        });
-        if (divisa && divisa.venta > 0) {
-          out.divisa_sell = divisa.venta;
-          out.divisa_buy  = divisa.compra || divisa.venta;
-          log.push('argentinadatos divisa OK: ' + divisa.venta);
+        const html = await r.text();
+        const idx = html.toLowerCase().indexOf('divisa');
+        if (idx > -1) {
+          const chunk = html.slice(idx, idx + 600);
+          const nums = chunk.match(/\d{3,4}[,.]\d{2}/g);
+          if (nums && nums.length >= 2) {
+            const sell = parseFloat(nums[1].replace(',', '.'));
+            if (sell > 800 && sell < 5000) {
+              out.divisa_sell = sell;
+              out.divisa_buy  = parseFloat(nums[0].replace(',', '.'));
+            }
+          }
         }
       }
-    } catch (e) { log.push('argentinadatos err: ' + e.message); }
+    } catch (e) { errors.push('infodolar: ' + e.message); }
   }
 
-  // ── 3. Expeller ────────────────────────────────────────
+  // ── 3. Expeller via proxy HTTPS (evita bloqueo HTTP) ───
   try {
-    const r = await fetch('http://www.expeller.com.ar/pizarra.asp', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
-        'Accept-Language': 'es-AR,es;q=0.9',
-        'Cache-Control': 'no-cache',
-      },
-      signal: AbortSignal.timeout(12000)
+    const url = encodeURIComponent('http://www.expeller.com.ar/pizarra.asp');
+    const r = await fetch('https://api.allorigins.win/get?url=' + url, {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+      signal: AbortSignal.timeout(15000)
     });
-    log.push('expeller status=' + r.status);
     if (r.ok) {
-      const html = await r.text();
-      log.push('expeller html len=' + html.length + ' snippet=' + html.slice(0, 300).replace(/\n/g,' '));
-      const findPrice = function(keyword) {
-        const lower = html.toLowerCase();
-        const idx = lower.indexOf(keyword.toLowerCase());
-        if (idx === -1) return null;
-        const chunk = html.slice(Math.max(0, idx-100), idx + 1000);
-        const nums = chunk.match(/\b(\d{4,7})\b/g);
-        if (!nums) return null;
-        for (var i = 0; i < nums.length; i++) {
-          const v = parseInt(nums[i], 10);
-          if (v >= 10000 && v <= 9999999) return v;
-        }
-        return null;
-      };
-      const expSoja    = findPrice('soja');
-      const expGirasol = findPrice('girasol');
-      log.push('expeller soja=' + expSoja + ' girasol=' + expGirasol);
-      if (expSoja)    out.expSoja    = expSoja;
-      if (expGirasol) out.expGirasol = expGirasol;
-    }
-  } catch (e) { log.push('expeller err: ' + e.message); }
+      const wrapper = await r.json();
+      const html = wrapper.contents || '';
+      if (html.length > 100) {
+        const findPrice = function(keyword) {
+          const lower = html.toLowerCase();
+          const idx = lower.indexOf(keyword.toLowerCase());
+          if (idx === -1) return null;
+          const chunk = html.slice(Math.max(0, idx - 50), idx + 800);
+          const nums = chunk.match(/\b\d{4,7}\b/g);
+          if (!nums) return null;
+          for (var i = 0; i < nums.length; i++) {
+            const v = parseInt(nums[i], 10);
+            if (v >= 10000 && v <= 9999999) return v;
+          }
+          return null;
+        };
+        const expSoja    = findPrice('soja');
+        const expGirasol = findPrice('girasol');
+        if (expSoja)    out.expSoja    = expSoja;
+        if (expGirasol) out.expGirasol = expGirasol;
+        if (!expSoja && !expGirasol) errors.push('expeller: precios no encontrados');
+      } else { errors.push('expeller: HTML vacio o bloqueado'); }
+    } else { errors.push('expeller proxy HTTP ' + r.status); }
+  } catch (e) { errors.push('expeller: ' + e.message); }
 
-  // ── 4. Granos BCR ──────────────────────────────────────
+  // ── 4. Granos Rosario via BCR ──────────────────────────
   try {
     const r = await fetch('https://www.bcr.com.ar/es/mercados/cotizaciones/granos', {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' },
@@ -167,18 +168,21 @@ module.exports = async function handler(req, res) {
       if (s) out.gS = s;
       if (m) out.gM = m;
       if (g) out.gG = g;
-      log.push('BCR: gS=' + s + ' gM=' + m + ' gG=' + g);
-    } else { log.push('BCR HTTP ' + r.status); }
-  } catch (e) { log.push('BCR err: ' + e.message); }
+    } else { errors.push('BCR HTTP ' + r.status); }
+  } catch (e) { errors.push('BCR: ' + e.message); }
 
-  // ── 5. Fallback granos ────────────────────────────────
+  // ── 5. Fallback granos desde CBOT ─────────────────────
   if (!out.gS && out.sojaI)  out.gS = Math.round(out.sojaI  * 0.88);
   if (!out.gM && out.maizI)  out.gM = Math.round(out.maizI  * 0.90);
   if (!out.gG && out.trigoI) out.gG = Math.round(out.trigoI * 0.92);
 
+  if (Object.keys(out).length === 0) {
+    return res.status(502).json({ error: 'Sin datos', errors: errors });
+  }
+
   return res.status(200).json({
     precios: out,
     ts: new Date().toISOString(),
-    debug: log
+    errors: errors.length ? errors : undefined
   });
 };
