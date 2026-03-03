@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Alborada">
+<meta name="theme-color" content="#c8a84b">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Alborada · Trading de Aceites</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#050807;--s1:#0a0f0d;--s2:#111714;--s3:#182018;--s4:#1f2a22;
+  --border:#263029;--border2:#2e3a31;
+  --gold:#c8a84b;--gold2:#e8c96a;--gold3:#f5d87a;
+  --green:#2eb872;--green2:#47d688;
+  --red:#d94f4f;--red2:#f06060;
+  --blue:#3d8fe0;--blue2:#5aaaf5;
+  --purple:#8b6fe0;--orange:#d97f2e;--teal:#26b8a0;
+  --text:#d8e8dc;--muted:#5e7868;--dim:#2e3e32;--faint:#1a2a1e;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
+
+/* BG texture */
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 70% 50% at 10% 0%,rgba(200,168,75,.06),transparent 55%),
+    radial-gradient(ellipse 50% 40% at 90% 100%,rgba(46,184,114,.04),transparent 55%),
+    radial-gradient(ellipse 40% 30% at 50% 50%,rgba(61,143,224,.02),transparent 60%);}
+body::after{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(200,168,75,.018) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(200,168,75,.018) 1px,transparent 1px);
+  background-size:52px 52px;}
+.wrap{position:relative;z-index:1;max-width:1180px;margin:0 auto;padding:24px 16px 80px;}
+
+/* ── HEADER ── */
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.brand{display:flex;align-items:center;gap:14px;}
+.brand-icon{width:42px;height:42px;background:linear-gradient(135deg,var(--gold),var(--orange));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0;}
+.brand-text h1{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;line-height:1;}
+.brand-text h1 span{color:var(--gold);}
+.brand-text p{font-size:.72rem;color:var(--muted);margin-top:2px;}
+.header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.status-pill{display:flex;align-items:center;gap:5px;background:var(--s2);border:1px solid var(--border);
+  border-radius:20px;padding:5px 10px;font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);}
+.dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.dok{background:var(--green);box-shadow:0 0 6px var(--green);animation:pulse 2s infinite;}
+.derr{background:var(--red);}
+.dload{background:var(--orange);animation:pulse .7s infinite;}
+.doff{background:var(--dim);}
+.cd-pill{font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);
+  background:var(--s3);border:1px solid var(--border);border-radius:6px;padding:4px 9px;}
+.btn-upd{background:rgba(200,168,75,.12);border:1px solid rgba(200,168,75,.3);color:var(--gold);
+  padding:5px 12px;border-radius:6px;font-size:.73rem;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:600;transition:all .18s;}
+.btn-upd:hover{background:rgba(200,168,75,.2);}
+.btn-upd:disabled{opacity:.4;cursor:not-allowed;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:3px;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:18px;overflow-x:auto;}
+.tab{flex:1;min-width:fit-content;padding:8px 10px;border:none;border-radius:9px;background:transparent;color:var(--muted);
+  font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center;white-space:nowrap;}
+.tab.active{background:var(--s4);color:var(--text);border:1px solid var(--border2);}
+.tab-content{display:none;animation:fUp .25s ease both;}
+.tab-content.active{display:block;}
+
+/* ── SECTIONS ── */
+.section{background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:14px;}
+.section.highlight{border-color:rgba(200,168,75,.25);}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.sec-title{font-family:'JetBrains Mono',monospace;font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--gold);display:flex;align-items:center;gap:8px;}
+.sec-title::after{content:'';width:30px;height:1px;background:var(--border2);}
+.sec-src{font-size:.62rem;color:var(--dim);font-family:'JetBrains Mono',monospace;}
+
+/* ── TC CARDS ── */
+.tc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:10px;}
+.tc-card{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:13px;position:relative;overflow:hidden;transition:border-color .3s;}
+.tc-card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.tc-oficial::after{background:var(--green);}
+.tc-mayorista::after{background:var(--blue);}
+.tc-blue::after{background:var(--purple);}
+.tc-mep::after{background:var(--teal);}
+.tc-ccl::after{background:var(--orange);}
+.tc-divisa::after{background:var(--green);}
+.tc-brecha::after{background:var(--gold);}
+.tc-src{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1px;}
+.tc-name{font-size:.75rem;color:var(--muted);font-weight:600;margin-bottom:8px;}
+.tc-vals{display:flex;gap:14px;margin-bottom:5px;}
+.tc-col .tc-lbl{font-family:'JetBrains Mono',monospace;font-size:.55rem;color:var(--dim);}
+.tc-val{font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:600;line-height:1.2;}
+.tc-time{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--dim);margin:3px 0 5px;}
+.tc-inp{width:100%;background:var(--s1);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.8rem;padding:5px 8px;border-radius:5px;outline:none;transition:border-color .2s;}
+.tc-inp:focus{border-color:var(--gold);}
+.tc-inp::placeholder{color:var(--dim);}
+.tc-ov-lbl{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--orange);margin-top:3px;display:none;}
+.brecha-rows{display:flex;flex-direction:column;gap:5px;margin-top:8px;}
+.br-row{display:flex;justify-content:space-between;align-items:center;}
+.br-lbl{font-size:.72rem;color:var(--muted);}
+.br-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;font-weight:600;color:var(--orange);}
+
+/* ── COMMODITY CARDS ── */
+.comm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:9px;}
+.cc{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;}
+.cc.c-oil{border-top:2px solid rgba(200,168,75,.5);}
+.cc.c-grain{border-top:2px solid rgba(217,127,46,.5);}
+.cc.c-intl{border-top:2px solid rgba(61,143,224,.5);}
+.cc-name{font-size:.68rem;color:var(--muted);font-weight:600;margin-bottom:3px;}
+.cc-val{font-family:'JetBrains Mono',monospace;font-size:.98rem;font-weight:600;margin-bottom:2px;}
+.cc-sub{font-size:.6rem;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-bottom:5px;}
+.cc-inp{width:100%;background:var(--s1);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.78rem;padding:4px 8px;border-radius:5px;outline:none;}
+.cc-inp:focus{border-color:var(--gold);}
+.cc-inp::placeholder{color:var(--dim);}
+
+/* ── DASHBOARD ── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-bottom:14px;}
+.kpi{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;top:0;left:0;bottom:0;width:3px;}
+.kpi.kpi-gold::before{background:var(--gold);}
+.kpi.kpi-green::before{background:var(--green);}
+.kpi.kpi-red::before{background:var(--red);}
+.kpi.kpi-blue::before{background:var(--blue);}
+.kpi.kpi-orange::before{background:var(--orange);}
+.kpi-lbl{font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;}
+.kpi-val{font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:600;}
+.kpi-sub{font-size:.65rem;color:var(--muted);margin-top:3px;}
+.chart-wrap{background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:14px;}
+.chart-title{font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.mini-chart{display:flex;align-items:flex-end;gap:4px;height:60px;}
+.bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.bar{width:100%;border-radius:3px 3px 0 0;min-height:2px;transition:height .3s;}
+.bar-lbl{font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--dim);text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40px;}
+
+/* ── FORM ── */
+.fg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.field{display:flex;flex-direction:column;gap:4px;}
+.field label{font-size:.68rem;color:var(--muted);font-weight:600;}
+.field input,.field select,.field textarea{background:var(--s1);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.82rem;padding:8px 10px;border-radius:7px;outline:none;transition:border-color .2s;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--gold);box-shadow:0 0 0 2px rgba(200,168,75,.1);}
+.field input::placeholder,.field textarea::placeholder{color:var(--dim);}
+.field select option{background:var(--s1);}
+.field textarea{resize:vertical;min-height:60px;font-size:.75rem;}
+.field-full{grid-column:1/-1;}
+
+/* ── LIVE PREVIEW ── */
+.live-sec{margin-top:14px;}
+.des-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:7px;margin-top:8px;}
+.di{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:8px 10px;}
+.di .dl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.di .dv{font-family:'JetBrains Mono',monospace;font-size:.84rem;}
+.di.dg{border-color:rgba(200,168,75,.35);}.di.dg .dv{color:var(--gold2);}
+.di.dr{border-color:rgba(217,79,79,.3);}.di.dr .dv{color:var(--red2);}
+.di.do{border-color:rgba(217,127,46,.3);}.di.do .dv{color:var(--orange);}
+.di.db{border-color:rgba(61,143,224,.3);}.di.db .dv{color:var(--blue2);}
+.di.dgr{border-color:rgba(46,184,114,.3);}.di.dgr .dv{color:var(--green2);}
+
+/* FX ALERT */
+.fx-box{border-radius:9px;padding:12px 14px;margin-top:10px;}
+.fx-box.warn{background:rgba(217,127,46,.07);border:1px solid rgba(217,127,46,.25);}
+.fx-box.ok{background:rgba(46,184,114,.06);border:1px solid rgba(46,184,114,.2);}
+.fx-box.info{background:rgba(61,143,224,.06);border:1px solid rgba(61,143,224,.18);}
+.fx-row{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:4px;font-size:.75rem;}
+.fx-lbl{color:var(--muted);min-width:190px;font-size:.73rem;}
+.chip{display:inline-block;padding:2px 7px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:.7rem;font-weight:500;white-space:nowrap;}
+.c-g{background:rgba(46,184,114,.13);color:var(--green2);border:1px solid rgba(46,184,114,.25);}
+.c-b{background:rgba(61,143,224,.12);color:var(--blue2);border:1px solid rgba(61,143,224,.25);}
+.c-p{background:rgba(139,111,224,.12);color:#c4b0f5;border:1px solid rgba(139,111,224,.25);}
+.c-o{background:rgba(217,127,46,.1);color:var(--orange);border:1px solid rgba(217,127,46,.2);}
+.c-r{background:rgba(217,79,79,.1);color:var(--red2);border:1px solid rgba(217,79,79,.2);}
+.c-gold{background:rgba(200,168,75,.1);color:var(--gold2);border:1px solid rgba(200,168,75,.2);}
+
+/* SUGERENCIAS */
+.sugs{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:7px;margin-top:9px;}
+.sp{background:var(--s3);border:1px solid rgba(61,143,224,.2);border-radius:7px;padding:8px 11px;}
+.sp .spl{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);margin-bottom:2px;}
+.sp .spv{font-family:'JetBrains Mono',monospace;font-size:.88rem;color:var(--blue2);font-weight:600;}
+.sp .spvs{font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--dim);}
+.sp.sp-warn{border-color:rgba(217,127,46,.3);}.sp.sp-warn .spv{color:var(--orange);}
+.sp.sp-ok{border-color:rgba(46,184,114,.28);}.sp.sp-ok .spv{color:var(--green2);}
+
+/* SEMÁFORO */
+.semaforo{display:flex;gap:6px;align-items:center;margin-top:8px;}
+.sem-dot{width:12px;height:12px;border-radius:50%;opacity:.3;}
+.sem-dot.active{opacity:1;box-shadow:0 0 8px currentColor;}
+.sem-red{background:var(--red);color:var(--red);}
+.sem-yellow{background:var(--orange);color:var(--orange);}
+.sem-green{background:var(--green);color:var(--green);}
+.sem-lbl{font-size:.72rem;color:var(--muted);}
+
+/* RESULTADO */
+.res-box{border-radius:9px;padding:12px 14px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+.rs .rl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.rs .rv{font-family:'JetBrains Mono',monospace;font-size:.95rem;}
+
+/* BANNER */
+.banner{background:var(--s2);border:1px solid var(--border);border-radius:12px;
+  padding:14px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:5px;align-items:center;transition:border-color .4s;}
+.banner.bg{border-color:var(--green);}.banner.br{border-color:var(--red);}.banner.n{border-color:var(--border);}
+.bs{flex:1;min-width:85px;text-align:center;}
+.bs .bl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.bs .bv{font-family:'JetBrains Mono',monospace;font-size:.98rem;font-weight:600;}
+.verdict{display:inline-block;padding:7px 13px;border-radius:6px;font-family:'Syne',sans-serif;font-size:.82rem;font-weight:700;}
+.verdict.g{background:rgba(46,184,114,.15);color:var(--green2);}
+.verdict.r{background:rgba(217,79,79,.15);color:var(--red2);}
+.verdict.n{background:rgba(200,168,75,.12);color:var(--gold2);}
+
+/* TABLE */
+.tov{overflow-x:auto;}
+.rtab{width:100%;border-collapse:collapse;font-size:.72rem;}
+.rtab th{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding:7px 7px;text-align:right;border-bottom:1px solid var(--border);white-space:nowrap;}
+.rtab th:first-child{text-align:left;}
+.rtab td{padding:8px 7px;border-bottom:1px solid rgba(38,48,41,.6);text-align:right;font-family:'JetBrains Mono',monospace;white-space:nowrap;}
+.rtab td:first-child{text-align:left;}
+.rtab tr:hover td{background:rgba(31,42,34,.5);}
+.rtab .frow td{color:var(--gold2);font-weight:600;border-top:1px solid var(--border);border-bottom:none;}
+.vg{color:var(--green2);}.vr{color:var(--red2);}.vb{color:var(--blue2);}.vgl{color:var(--gold2);}.vm{color:var(--muted);}
+
+/* FILTER BAR */
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;}
+.filter-bar input,.filter-bar select{background:var(--s3);border:1px solid var(--border);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.75rem;padding:6px 10px;border-radius:6px;outline:none;}
+.filter-bar input:focus,.filter-bar select:focus{border-color:var(--gold);}
+.filter-bar input::placeholder{color:var(--dim);}
+
+/* BTNS */
+.btn{padding:7px 15px;border-radius:7px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;transition:all .17s;}
+.btn-p{background:var(--gold);color:#050807;}.btn-p:hover{background:var(--gold3);transform:translateY(-1px);}
+.btn-g{background:rgba(200,168,75,.1);border:1px solid rgba(200,168,75,.25);color:var(--gold);}
+.btn-g:hover{background:rgba(200,168,75,.18);}
+.btn-d{background:transparent;border:1px solid var(--border);color:var(--red2);font-size:.65rem;padding:3px 7px;}
+.btn-d:hover{border-color:var(--red);}
+.btn-rr{background:rgba(217,79,79,.07);border:1px solid rgba(217,79,79,.2);color:var(--red2);}
+.btn-rr:hover{background:rgba(217,79,79,.13);}
+.btn-teal{background:rgba(38,184,160,.08);border:1px solid rgba(38,184,160,.2);color:var(--teal);}
+.btn-teal:hover{background:rgba(38,184,160,.15);}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(5,8,7,.85);z-index:100;display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--s2);border:1px solid var(--border2);border-radius:14px;padding:22px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.modal-title{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;}
+.modal-close{background:var(--s3);border:1px solid var(--border);color:var(--muted);
+  width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;}
+.detail-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);}
+.detail-row:last-child{border-bottom:none;}
+.detail-lbl{font-size:.73rem;color:var(--muted);}
+.detail-val{font-family:'JetBrains Mono',monospace;font-size:.8rem;}
+
+/* FX MATRIX */
+.fx-matrix{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px;margin-top:10px;}
+.fxc{background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;}
+.fxc .fxcl{font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px;}
+.fxc .fxcv{font-family:'JetBrains Mono',monospace;font-size:.98rem;font-weight:600;}
+
+/* SCARDS */
+.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;}
+.sc{background:var(--s3);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;}
+.sc .scl{font-family:'JetBrains Mono',monospace;font-size:.56rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+.sc .scv{font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;}
+
+.sep{height:1px;background:var(--border);margin:12px 0;}
+.note{font-size:.68rem;color:var(--muted);line-height:1.55;margin-top:4px;}
+.note a{color:var(--blue2);}
+.empty-msg{text-align:center;color:var(--muted);font-size:.78rem;padding:20px;font-style:italic;}
+.save-bar{display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-bottom:8px;font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);}
+.tag{display:inline-block;padding:1px 6px;border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:.6rem;font-weight:600;}
+.tag-new{background:rgba(46,184,114,.15);color:var(--green2);}
+.tag-pend{background:rgba(200,168,75,.12);color:var(--gold2);}
+
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+@keyframes fUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">🫙</div>
+    <div class="brand-text">
+      <h1>Alborada · <span>Aceites</span></h1>
+      <p>Soja · Maíz · Girasol · Multi-divisa · Argentina</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="status-pill"><div class="dot doff" id="dotTC"></div><span id="stTC">TC</span></div>
+    <div class="status-pill"><div class="dot doff" id="dotCB"></div><span id="stCB">CBOT</span></div>
+    <div class="cd-pill" id="cdPill">—</div>
+    <button class="btn-upd" id="btnUpd" onclick="refreshAll()">⟳ Actualizar</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab active" onclick="showTab('mercado')">📊 Mercado</button>
+  <button class="tab" onclick="showTab('calc')">🧮 Calcular</button>
+  <button class="tab" onclick="showTab('dash')">📈 Dashboard</button>
+  <button class="tab" onclick="showTab('hist')">🗂 Historial</button>
+  <button class="tab" onclick="showTab('conversor')">💱 Conversor</button>
+  <button class="tab" onclick="showTab('info')">📚 Info Comercial</button>
+</div>
+
+<!-- ══════════ MERCADO ══════════ -->
+<div id="tab-mercado" class="tab-content active">
+
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">Tipos de Cambio <span class="sec-src">dolarapi.com vía proxy</span></div>
+    </div>
+    <div class="tc-grid">
+      <div class="tc-card tc-oficial">
+        <div class="tc-src">BNA · bcra.gob.ar</div>
+        <div class="tc-name">Dólar Oficial BNA</div>
+        <div class="tc-vals">
+          <div class="tc-col"><div class="tc-lbl">Compra</div><div class="tc-val" id="tc_of_c" style="color:var(--muted)">—</div></div>
+          <div class="tc-col"><div class="tc-lbl">Venta</div><div class="tc-val" id="tc_of_v" style="color:var(--green2)">—</div></div>
+        </div>
+        <div class="tc-time" id="tt_of">—</div>
+        <input class="tc-inp" id="ov_oficial" type="number" placeholder="Override venta..." oninput="setOV('oficial',this.value)">
+        <div class="tc-ov-lbl" id="ovlbl_oficial">⚠ Override activo</div>
+      </div>
+      <div class="tc-card tc-mayorista">
+        <div class="tc-src">BCRA · Com. A 3500 · exportadores</div>
+        <div class="tc-name">Dólar Mayorista BCRA</div>
+        <div class="tc-vals">
+          <div class="tc-col"><div class="tc-lbl">Compra</div><div class="tc-val" id="tc_may_c" style="color:var(--muted)">—</div></div>
+          <div class="tc-col"><div class="tc-lbl">Venta</div><div class="tc-val" id="tc_may_v" style="color:var(--blue2)">—</div></div>
+        </div>
+        <div class="tc-time" id="tt_may">—</div>
+        <input class="tc-inp" id="ov_mayorista" type="number" placeholder="Override venta..." oninput="setOV('mayorista',this.value)">
+        <div class="tc-ov-lbl" id="ovlbl_mayorista">⚠ Override activo</div>
+      </div>
+      <div class="tc-card tc-divisa">
+        <div class="tc-src">BNA · Transferencias internacionales</div>
+        <div class="tc-name">Dólar Divisa BNA</div>
+        <div class="tc-vals">
+          <div class="tc-col"><div class="tc-lbl">Compra</div><div class="tc-val" id="tc_div_c" style="color:var(--muted)">—</div></div>
+          <div class="tc-col"><div class="tc-lbl">Venta</div><div class="tc-val" id="tc_div_v" style="color:var(--green2)">—</div></div>
+        </div>
+        <div class="tc-time" id="tt_div">—</div>
+        <input class="tc-inp" id="ov_divisa" type="number" placeholder="Override venta..." oninput="setOV('divisa',this.value)">
+        <div class="tc-ov-lbl" id="ovlbl_divisa">⚠ Override activo</div>
+      </div>
+      <div class="tc-card tc-blue">
+        <div class="tc-src">Mercado informal</div>
+        <div class="tc-name">Dólar Blue / Billete</div>
+        <div class="tc-vals">
+          <div class="tc-col"><div class="tc-lbl">Compra</div><div class="tc-val" id="tc_bl_c" style="color:var(--muted)">—</div></div>
+          <div class="tc-col"><div class="tc-lbl">Venta</div><div class="tc-val" id="tc_bl_v" style="color:#c4b0f5">—</div></div>
+        </div>
+        <div class="tc-time" id="tt_bl">—</div>
+        <input class="tc-inp" id="ov_blue" type="number" placeholder="Override venta..." oninput="setOV('blue',this.value)">
+        <div class="tc-ov-lbl" id="ovlbl_blue">⚠ Override activo</div>
+      </div>
+      <div class="tc-card tc-mep">
+        <div class="tc-src">Bolsa · AL30/GD30</div>
+        <div class="tc-name">Dólar MEP / Bolsa</div>
+        <div class="tc-vals"><div class="tc-col"><div class="tc-lbl">Venta</div><div class="tc-val" id="tc_mep_v" style="color:var(--teal)">—</div></div></div>
+        <div class="tc-time" id="tt_mep">—</div>
+      </div>
+      <div class="tc-card tc-ccl">
+        <div class="tc-src">Contado con liq.</div>
+        <div class="tc-name">Dólar CCL</div>
+        <div class="tc-vals"><div class="tc-col"><div class="tc-lbl">Venta</div><div class="tc-val" id="tc_ccl_v" style="color:var(--orange)">—</div></div></div>
+        <div class="tc-time" id="tt_ccl">—</div>
+      </div>
+      <div class="tc-card tc-brecha">
+        <div class="tc-src">Calculado automáticamente</div>
+        <div class="tc-name">Brechas cambiarias</div>
+        <div class="brecha-rows" id="brecha_rows">
+          <span style="font-size:.7rem;color:var(--dim)">Esperando cotizaciones...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACEITES: ingreso manual + ref externas -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">Aceites (U$S/Ton) <span class="sec-src" id="oilSrc">Yahoo Finance · CBOT ZL=F · gratis</span></div>
+      <a href="https://news.agrofy.com.ar/granos" target="_blank" class="btn btn-g" style="font-size:.72rem;padding:5px 11px;text-decoration:none">🌐 Ver Agrofy</a>
+    </div>
+    <div id="oilStatus" style="display:none;margin-bottom:10px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--orange);padding:8px 12px;background:rgba(217,127,46,.07);border:1px solid rgba(217,127,46,.2);border-radius:7px"></div>
+    <div class="comm-grid">
+      <div class="cc c-oil">
+        <div class="cc-name">🫙 Soja Crudo</div>
+        <div class="cc-val" id="cv_aSC">—</div>
+        <div class="cc-sub" id="cs_aSC">U$S/Ton FOB Rosario</div>
+        <input class="cc-inp" id="ci_aSC" type="number" placeholder="Override manual" oninput="setProd('aSC',this.value,'manual')">
+      </div>
+      <div class="cc c-oil">
+        <div class="cc-name">🫙 Soja Refinado</div>
+        <div class="cc-val" id="cv_aSR">—</div>
+        <div class="cc-sub" id="cs_aSR">U$S/Ton FOB Rosario</div>
+        <input class="cc-inp" id="ci_aSR" type="number" placeholder="Override manual" oninput="setProd('aSR',this.value,'manual')">
+      </div>
+      <div class="cc c-oil">
+        <div class="cc-name">🌽 Maíz Crudo</div>
+        <div class="cc-val" id="cv_aMC">—</div>
+        <div class="cc-sub" id="cs_aMC">U$S/Ton referencia</div>
+        <input class="cc-inp" id="ci_aMC" type="number" placeholder="Override manual" oninput="setProd('aMC',this.value,'manual')">
+      </div>
+      <div class="cc c-oil">
+        <div class="cc-name">🌽 Maíz Refinado</div>
+        <div class="cc-val" id="cv_aMR">—</div>
+        <div class="cc-sub" id="cs_aMR">U$S/Ton referencia</div>
+        <input class="cc-inp" id="ci_aMR" type="number" placeholder="Override manual" oninput="setProd('aMR',this.value,'manual')">
+      </div>
+      <div class="cc c-oil">
+        <div class="cc-name">🌻 Girasol Crudo</div>
+        <div class="cc-val" id="cv_aGC">—</div>
+        <div class="cc-sub" id="cs_aGC">U$S/Ton Rotterdam</div>
+        <input class="cc-inp" id="ci_aGC" type="number" placeholder="Override manual" oninput="setProd('aGC',this.value,'manual')">
+      </div>
+      <div class="cc c-oil">
+        <div class="cc-name">🌻 Girasol Refinado</div>
+        <div class="cc-val" id="cv_aGR">—</div>
+        <div class="cc-sub" id="cs_aGR">U$S/Ton referencia</div>
+        <input class="cc-inp" id="ci_aGR" type="number" placeholder="Override manual" oninput="setProd('aGR',this.value,'manual')">
+      </div>
+    </div>
+  </div>
+
+  <!-- GRANOS: auto via Claude AI -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">Granos (U$S/Ton) <span class="sec-src" id="grainSrc">Yahoo Finance · CBOT · gratis</span></div>
+      <button class="btn btn-g" id="btnFetchGrain" onclick="fetchCBOT()" style="font-size:.72rem;padding:5px 11px">⟳ Actualizar precios</button>
+    </div>
+    <div class="comm-grid">
+      <div class="cc c-intl">
+        <div class="cc-name">🌐 Soja CBOT</div>
+        <div class="cc-val vb" id="cv_sojaI">—</div>
+        <div class="cc-sub" id="cs_sojaI">U$S/Ton</div>
+      </div>
+      <div class="cc c-intl">
+        <div class="cc-name">🌐 Maíz CBOT</div>
+        <div class="cc-val vb" id="cv_maizI">—</div>
+        <div class="cc-sub" id="cs_maizI">U$S/Ton</div>
+      </div>
+      <div class="cc c-intl">
+        <div class="cc-name">🌐 Trigo CBOT</div>
+        <div class="cc-val vb" id="cv_trigoI">—</div>
+        <div class="cc-sub" id="cs_trigoI">U$S/Ton</div>
+      </div>
+      <div class="cc c-grain">
+        <div class="cc-name">🌿 Soja Rosario</div>
+        <div class="cc-val" id="cv_gS">—</div>
+        <div class="cc-sub" id="cs_gS">U$S/Ton disponible</div>
+        <input class="cc-inp" id="ci_gS" type="number" placeholder="Override manual" oninput="setProd('gS',this.value,'manual')">
+      </div>
+      <div class="cc c-grain">
+        <div class="cc-name">🌽 Maíz Rosario</div>
+        <div class="cc-val" id="cv_gM">—</div>
+        <div class="cc-sub" id="cs_gM">U$S/Ton disponible</div>
+        <input class="cc-inp" id="ci_gM" type="number" placeholder="Override manual" oninput="setProd('gM',this.value,'manual')">
+      </div>
+      <div class="cc c-grain">
+        <div class="cc-name">🌻 Girasol Rosario</div>
+        <div class="cc-val" id="cv_gG">—</div>
+        <div class="cc-sub" id="cs_gG">U$S/Ton disponible</div>
+        <input class="cc-inp" id="ci_gG" type="number" placeholder="Override manual" oninput="setProd('gG',this.value,'manual')">
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPELLER -->
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">Expeller ($/Ton) <span class="sec-src">expeller.com.ar · pizarra</span></div>
+      <a href="http://www.expeller.com.ar/pizarra.asp" target="_blank" class="btn btn-g" style="font-size:.72rem;padding:5px 11px;text-decoration:none">🌐 Ver pizarra</a>
+    </div>
+    <div class="comm-grid">
+      <div class="cc c-grain">
+        <div class="cc-name">🫘 Expeller Soja</div>
+        <div class="cc-val" id="cv_expSoja">—</div>
+        <div class="cc-sub" id="cs_expSoja">$/Ton · expeller.com.ar</div>
+        <input class="cc-inp" id="ci_expSoja" type="number" placeholder="Override manual" oninput="setProd('expSoja',this.value,'manual')">
+      </div>
+      <div class="cc c-grain">
+        <div class="cc-name">🌻 Expeller Girasol</div>
+        <div class="cc-val" id="cv_expGirasol">—</div>
+        <div class="cc-sub" id="cs_expGirasol">$/Ton · expeller.com.ar</div>
+        <input class="cc-inp" id="ci_expGirasol" type="number" placeholder="Override manual" oninput="setProd('expGirasol',this.value,'manual')">
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ CALCULADORA ══════════ -->
+<div id="tab-calc" class="tab-content">
+  <div class="save-bar"><div class="dot dok"></div><span id="saveStatus">Datos guardados</span></div>
+
+  <div class="banner n" id="banner">
+    <div class="bs"><div class="bl">Σ Costo Total</div><div class="bv vgl" id="b_ct">$—</div></div>
+    <div class="bs"><div class="bl">Ideal +7.5%</div><div class="bv vb" id="b_sug">$—</div></div>
+    <div class="bs"><div class="bl">Σ Venta Real</div><div class="bv vm" id="b_ve">$—</div></div>
+    <div class="bs"><div class="verdict n" id="verdict">Sin datos</div></div>
+    <div class="bs"><div class="bl">Resultado neto</div><div class="bv vgl" id="b_ma">$—</div></div>
+  </div>
+
+  <div class="section highlight">
+    <div class="sec-hdr"><div class="sec-title">Nueva Operación</div></div>
+    <div class="fg">
+      <div class="field"><label>N° Cotización</label><input type="text" id="nr_cot" placeholder="ALB-26-XXXX"></div>
+      <div class="field"><label>Fecha</label><input type="date" id="nr_fecha"></div>
+      <div class="field"><label>Producto</label>
+        <select id="nr_prod">
+          <option>Aceite Soja Crudo</option><option>Aceite Soja Refinado</option>
+          <option>Aceite Maíz Crudo</option><option>Aceite Maíz Refinado</option>
+          <option>Aceite Girasol Crudo</option><option>Aceite Girasol Refinado</option>
+        </select>
+      </div>
+      <div class="field"><label>Cantidad (Ton)</label><input type="number" id="nr_ton" placeholder="Ej: 20" oninput="liveCalc()"></div>
+      <div class="field"><label>💰 Precio Compra ($/Ton)</label><input type="number" id="nr_compra" placeholder="Ej: 1.020" oninput="liveCalc()"></div>
+      <div class="field"><label>💵 Proveedor cobra en</label>
+        <select id="nr_tc_c" onchange="liveCalc()">
+          <option value="oficial">Dólar Oficial BNA</option>
+          <option value="mayorista">Dólar Mayorista</option>
+          <option value="blue">Dólar Blue / Billete</option>
+          <option value="divisa">Dólar Divisa BNA</option>
+          <option value="pesos">Pesos Argentinos</option>
+        </select>
+      </div>
+      <div class="field"><label>🚚 Flete ($/Ton)</label><input type="number" id="nr_flete" placeholder="78" oninput="liveCalc()"></div>
+      <div class="field"><label>⚙️ Servicio / Fasón ($/Ton)</label><input type="number" id="nr_fason" placeholder="160" oninput="liveCalc()"></div>
+      <div class="field"><label>🤝 Comisión ($/Ton)</label><input type="number" id="nr_com" value="0" oninput="liveCalc()"></div>
+      <div class="field"><label>📋 Gastos Eventuales ($/Ton)</label><input type="number" id="nr_gas" value="0" oninput="liveCalc()"></div>
+      <div class="field"><label>💵 Comprador paga en</label>
+        <select id="nr_tc_v" onchange="liveCalc()">
+          <option value="mayorista">Dólar Mayorista</option>
+          <option value="oficial">Dólar Oficial BNA</option>
+          <option value="blue">Dólar Blue / Billete</option>
+          <option value="divisa">Dólar Divisa BNA</option>
+          <option value="pesos">Pesos Argentinos</option>
+        </select>
+      </div>
+      <div class="field"><label>🏷️ Precio Venta Real ($/Ton)</label><input type="number" id="nr_venta" placeholder="Completar al vender" oninput="liveCalc()"></div>
+      <div class="field"><label>👤 Proveedor</label><input type="text" id="nr_prov" placeholder="Nombre proveedor"></div>
+      <div class="field"><label>🏢 Cliente / Comprador</label><input type="text" id="nr_cli" placeholder="Nombre cliente"></div>
+      <div class="field field-full"><label>📝 Notas</label><textarea id="nr_notas" placeholder="Observaciones, condiciones, aclaraciones..."></textarea></div>
+    </div>
+
+    <div id="liveBox" style="display:none">
+      <div class="sep"></div>
+      <div class="sec-title" style="margin-bottom:8px">Desglose de Costos — Vista en vivo</div>
+      <div class="des-grid" id="liveDes"></div>
+      <div class="sep"></div>
+      <div class="sec-title" style="margin-bottom:8px">Análisis de Brecha Cambiaria</div>
+      <div id="liveFX"></div>
+      <div class="sep"></div>
+      <div class="sec-title" style="margin-bottom:8px">Precios Sugeridos de Venta</div>
+      <div class="sugs" id="liveSugs"></div>
+      <div id="semaforo" style="margin-top:8px"></div>
+      <div id="liveRes"></div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:7px;flex-wrap:wrap;">
+      <button class="btn btn-p" onclick="addRow()">+ Guardar operación</button>
+      <button class="btn btn-g" onclick="addSample()">📋 Ejemplos</button>
+      <button class="btn btn-rr" onclick="clearAll()">🗑 Borrar todo</button>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Operaciones</div></div>
+    <div class="tov" id="tableWrap"><p class="empty-msg">No hay operaciones. Completá el formulario ↑</p></div>
+  </div>
+
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Resumen Global</div></div>
+    <div class="scards">
+      <div class="sc"><div class="scl">Operaciones</div><div class="scv" style="color:var(--gold2)" id="s_n">0</div></div>
+      <div class="sc"><div class="scl">Σ Costo Total</div><div class="scv vgl" id="s_ct">$0</div></div>
+      <div class="sc"><div class="scl">Σ Venta Real</div><div class="scv" id="s_ve">$0</div></div>
+      <div class="sc"><div class="scl">Ganancia Total</div><div class="scv" id="s_ma">$0</div></div>
+      <div class="sc"><div class="scl">Margen Prom.</div><div class="scv" id="s_avg">$0</div></div>
+      <div class="sc"><div class="scl">Rentabilidad %</div><div class="scv" id="s_pct">0%</div></div>
+      <div class="sc"><div class="scl">Mejor operación</div><div class="scv" id="s_best">—</div></div>
+      <div class="sc"><div class="scl">Peor operación</div><div class="scv" id="s_worst">—</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ DASHBOARD ══════════ -->
+<div id="tab-dash" class="tab-content">
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">KPIs</div></div>
+    <div class="kpi-grid" id="kpiGrid"><p class="empty-msg">Cargá operaciones para ver métricas.</p></div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Rentabilidad por Operación</div></div>
+    <div id="chartArea"><p class="empty-msg">Sin datos aún.</p></div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Distribución por Producto</div></div>
+    <div id="distArea"><p class="empty-msg">Sin datos aún.</p></div>
+  </div>
+</div>
+
+<!-- ══════════ HISTORIAL ══════════ -->
+<div id="tab-hist" class="tab-content">
+  <div class="section">
+    <div class="sec-hdr">
+      <div class="sec-title">Historial Completo</div>
+      <div style="display:flex;gap:7px;">
+        <button class="btn btn-teal" onclick="exportCSV()">⬇ Exportar CSV</button>
+      </div>
+    </div>
+    <div class="filter-bar">
+      <input type="text" id="flt_txt" placeholder="Buscar N°, producto, cliente..." oninput="renderHist()">
+      <select id="flt_prod" onchange="renderHist()">
+        <option value="">Todos los productos</option>
+        <option>Aceite Soja Crudo</option><option>Aceite Soja Refinado</option>
+        <option>Aceite Maíz Crudo</option><option>Aceite Maíz Refinado</option>
+        <option>Aceite Girasol Crudo</option><option>Aceite Girasol Refinado</option>
+      </select>
+      <select id="flt_res" onchange="renderHist()">
+        <option value="">Todos</option>
+        <option value="g">Con ganancia</option>
+        <option value="r">Con pérdida</option>
+        <option value="p">Sin venta aún</option>
+      </select>
+      <input type="date" id="flt_desde" onchange="renderHist()">
+      <input type="date" id="flt_hasta" onchange="renderHist()">
+    </div>
+    <div class="tov" id="histWrap"><p class="empty-msg">Sin operaciones aún.</p></div>
+    <div id="histStats" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<!-- ══════════ CONVERSOR ══════════ -->
+<div id="tab-conversor" class="tab-content">
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Conversor Multi-divisa</div></div>
+    <div class="fg" style="max-width:420px">
+      <div class="field"><label>Monto</label><input type="number" id="fx_m" placeholder="Ej: 1000" oninput="calcFX()"></div>
+      <div class="field"><label>Moneda origen</label>
+        <select id="fx_o" onchange="calcFX()">
+          <option value="usd_oficial">U$S Oficial BNA</option>
+          <option value="usd_divisa">U$S Divisa BNA</option>
+          <option value="usd_mayorista">U$S Mayorista</option>
+          <option value="usd_blue">U$S Blue</option>
+          <option value="ars">Pesos Argentinos</option>
+        </select>
+      </div>
+    </div>
+    <div class="fx-matrix" id="fxMatrix"></div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Simulador de Brecha Cambiaria</div></div>
+    <p class="note" style="margin-bottom:12px">Calculá exactamente cuánto perdés o ganás según los tipos de cambio de compra y venta.</p>
+    <div class="fg" style="max-width:600px">
+      <div class="field"><label>Precio pactado ($/Ton)</label><input type="number" id="sim_p" placeholder="Ej: 1500" oninput="calcSim()"></div>
+      <div class="field"><label>Proveedor cobra en</label>
+        <select id="sim_prov" onchange="calcSim()">
+          <option value="blue">Dólar Blue</option>
+          <option value="oficial">Dólar Oficial</option>
+          <option value="divisa">Dólar Divisa BNA</option>
+          <option value="mayorista">Dólar Mayorista</option>
+          <option value="pesos">Pesos</option>
+        </select>
+      </div>
+      <div class="field"><label>Comprador paga en</label>
+        <select id="sim_comp" onchange="calcSim()">
+          <option value="mayorista">Dólar Mayorista</option>
+          <option value="oficial">Dólar Oficial</option>
+          <option value="divisa">Dólar Divisa BNA</option>
+          <option value="blue">Dólar Blue</option>
+          <option value="pesos">Pesos</option>
+        </select>
+      </div>
+    </div>
+    <div id="simResult" style="margin-top:12px"></div>
+  </div>
+</div>
+
+<!-- ══════════ INFO COMERCIAL ══════════ -->
+<div id="tab-info" class="tab-content">
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Márgenes típicos del sector</div></div>
+    <div class="comm-grid">
+      <div class="cc"><div class="cc-name">Margen mínimo aceptable</div><div class="cc-val" style="color:var(--red2)">3 – 5%</div><div class="cc-sub">Por debajo: riesgo alto</div></div>
+      <div class="cc"><div class="cc-name">Margen conservador</div><div class="cc-val" style="color:var(--orange)">5 – 8%</div><div class="cc-sub">Protege ante imprevistos</div></div>
+      <div class="cc"><div class="cc-name">Margen objetivo</div><div class="cc-val" style="color:var(--green2)">8 – 12%</div><div class="cc-sub">Ideal para el sector</div></div>
+      <div class="cc"><div class="cc-name">Margen excelente</div><div class="cc-val" style="color:var(--gold2)">&gt; 12%</div><div class="cc-sub">Oportunidad de mercado</div></div>
+      <div class="cc"><div class="cc-name">Spread típico brecha</div><div class="cc-val" style="color:var(--orange)">5 – 25%</div><div class="cc-sub">Según contexto macro</div></div>
+      <div class="cc"><div class="cc-name">Costo fasón típico</div><div class="cc-val">U$S 80–160</div><div class="cc-sub">Por tonelada procesada</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Costos de referencia ($/Ton)</div></div>
+    <div class="comm-grid">
+      <div class="cc"><div class="cc-name">Flete regional</div><div class="cc-val">$60 – $100</div><div class="cc-sub">Rosario / Córdoba</div></div>
+      <div class="cc"><div class="cc-name">Flete larga distancia</div><div class="cc-val">$100 – $180</div><div class="cc-sub">NOA / Patagonia</div></div>
+      <div class="cc"><div class="cc-name">Seguro transporte</div><div class="cc-val">0.3 – 0.8%</div><div class="cc-sub">Sobre valor de mercadería</div></div>
+      <div class="cc"><div class="cc-name">Almacenaje (mensual)</div><div class="cc-val">U$S 2 – 5</div><div class="cc-sub">Por tonelada por mes</div></div>
+      <div class="cc"><div class="cc-name">Comisión broker</div><div class="cc-val">0.5 – 2%</div><div class="cc-sub">Sobre precio de venta</div></div>
+      <div class="cc"><div class="cc-name">Análisis calidad</div><div class="cc-val">U$S 50–120</div><div class="cc-sub">Por muestra/certificado</div></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Alertas y puntos de atención</div></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:rgba(217,79,79,.07);border:1px solid rgba(217,79,79,.2);border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:var(--red2);margin-bottom:4px">⚠ Riesgo cambiario</div>
+        <div class="note" style="color:var(--text)">Cuando el proveedor cobra en Blue y el comprador paga en Mayorista, la brecha puede consumir el 10–20% del margen. Siempre calculá el costo en el TC más alto que uses.</div>
+      </div>
+      <div style="background:rgba(217,127,46,.07);border:1px solid rgba(217,127,46,.2);border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:var(--orange);margin-bottom:4px">⚡ Volatilidad de precios</div>
+        <div class="note" style="color:var(--text)">Los aceites vegetales pueden variar 5-15% en pocas semanas. Establecé fecha de vencimiento en tus cotizaciones (máximo 48-72hs). Usá precio de cierre del día para cotizar.</div>
+      </div>
+      <div style="background:rgba(46,184,114,.06);border:1px solid rgba(46,184,114,.2);border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:var(--green2);margin-bottom:4px">✓ Buenas prácticas</div>
+        <div class="note" style="color:var(--text)">Siempre confirmá por escrito el tipo de cambio pactado. En operaciones mixtas (Blue/Mayorista), documentá la diferencia como ajuste. Revisá spread cada vez que se modifiquen los TC antes de cerrar.</div>
+      </div>
+      <div style="background:rgba(61,143,224,.06);border:1px solid rgba(61,143,224,.18);border-radius:8px;padding:12px">
+        <div style="font-weight:700;color:var(--blue2);margin-bottom:4px">📋 Documentación recomendada</div>
+        <div class="note" style="color:var(--text)">Factura con TC del día · Remito con análisis de calidad · Seguro de transporte · Certificado de origen (exportación) · Contrato de fasón con precio fijo o ajustable.</div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-hdr"><div class="sec-title">Links útiles del sector</div></div>
+    <div class="comm-grid" style="gap:8px">
+      <a href="https://www.bcr.com.ar/es/mercados/cotizaciones" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 BCR Rosario</div><div class="cc-sub">Cotizaciones granos y aceites</div></div></a>
+      <a href="https://www.bolsadecereales.com/precios-internacionales" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 Bolsa Cereales BA</div><div class="cc-sub">Precios internacionales</div></div></a>
+      <a href="https://news.agrofy.com.ar/granos" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 Agrofy News</div><div class="cc-sub">Precios y noticias agroindustria</div></div></a>
+      <a href="https://www.matba-rofex.com.ar/" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 MATBA-ROFEX</div><div class="cc-sub">Futuros y opciones Argentina</div></div></a>
+      <a href="https://ambito.com/contenidos/dolar.html" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 Ámbito Financiero</div><div class="cc-sub">Tipos de cambio</div></div></a>
+      <a href="https://dolarito.ar" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 Dolarito</div><div class="cc-sub">TC actualizados al minuto</div></div></a>
+      <a href="https://www.bcra.gob.ar/PublicacionesEstadisticas/Tipos_de_cambio_003.asp" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 BCRA Oficial</div><div class="cc-sub">Tipo de cambio oficial BNA</div></div></a>
+      <a href="https://www.sagpya.gov.ar" target="_blank" style="text-decoration:none"><div class="cc" style="cursor:pointer"><div class="cc-name" style="color:var(--blue2)">🌐 SAGPYA</div><div class="cc-sub">Min. de Agricultura Argentina</div></div></a>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+</div><!-- /wrap -->
+<script>
+// ══════════════════════════════════════════════════════════
+//  STORAGE & STATE
+// ══════════════════════════════════════════════════════════
+const SK='alb6_rows', OK='alb6_ov', PK='alb6_prod';
+let rows=ls(SK,[]), overrides=ls(OK,{}), prod=ls(PK,{});
+let apiD={oficial:0,oficial_c:0,mayorista:0,mayorista_c:0,blue:0,blue_c:0,mep:0,ccl:0,divisa:0,divisa_c:0};
+
+function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
+function lss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+function saveRows(){lss(SK,rows);document.getElementById('saveStatus').textContent='Guardado '+new Date().toLocaleTimeString('es-AR');}
+
+function getTC(k){
+  if(k==='pesos')return 1;
+  if(overrides[k]>0)return overrides[k];
+  return apiD[k]||0;
+}
+function setOV(k,val){
+  const v=parseFloat(val);
+  overrides[k]=(isNaN(v)||v<=0)?0:v;
+  lss(OK,overrides);
+  document.getElementById('ovlbl_'+k).style.display=overrides[k]?'block':'none';
+  updateBrechas(); liveCalc(); calcFX(); calcSim();
+}
+// setProd is defined below, after fetchCommoditiesAI
+
+// ══════════════════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════════════════
+function fmt(n,pre='$ '){
+  if(n===null||n===undefined||isNaN(n))return '—';
+  return(n<0?'-'+pre:pre)+Math.abs(Math.round(n)).toLocaleString('es-AR');
+}
+function fmtM(n){// with sign
+  if(n===null||isNaN(n))return '—';
+  return(n>=0?'+':'-')+'$ '+Math.abs(Math.round(n)).toLocaleString('es-AR');
+}
+function fmtU(n){return n?'U$S '+parseFloat(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,','):'—';}
+function pct(n){return n===null||isNaN(n)?'—':(n>=0?'+':'')+n.toFixed(1)+' %';}
+function tcLabel(k){return{oficial:'Oficial BNA',divisa:'Divisa BNA',mayorista:'Mayorista BCRA',blue:'Blue',pesos:'Pesos'}[k]||k;}
+function tcChip(k){
+  const m={oficial:'chip c-g',divisa:'chip c-g',mayorista:'chip c-b',blue:'chip c-p',pesos:'chip c-gold'};
+  return `<span class="${m[k]||'chip'}">${tcLabel(k)}</span>`;
+}
+
+function calcRow(r){
+  const ct=r.compra+r.flete+r.fason+r.com+r.gas;
+  const ton=r.ton||1;
+  const ctTot=ct*ton;
+  const ma=r.venta!==null?r.venta-ct:null;
+  const maTot=ma!==null?ma*ton:null;
+  const mp=(r.venta!==null&&ct>0)?(ma/ct)*100:null;
+  const tcC=r.tc_c||'mayorista', tcV=r.tc_v||'mayorista';
+  let brecha=null, ctV2=null;
+  if(tcC!=='pesos'&&tcV!=='pesos'&&tcC!==tcV){
+    const rC=getTC(tcC),rV=getTC(tcV);
+    if(rC&&rV){ctV2=(ct/rC)*rV;brecha=ctV2-ct;}
+  }
+  const bAj=(brecha&&brecha>0)?brecha:0;
+  const ctAj=ct+bAj;
+  const maAj=r.venta!==null?r.venta-ctAj:null;
+  const mpAj=ctAj>0&&r.venta!==null?(maAj/ctAj)*100:null;
+  return{ct,ctTot,ma,maTot,mp,brecha,bAj,ctAj,ctV2,tcC,tcV,maAj,mpAj,
+    s5:ctAj*1.05,s75:ctAj*1.075,s10:ctAj*1.10,s15:ctAj*1.15};
+}
+
+// ══════════════════════════════════════════════════════════
+//  FETCH TC — múltiples fuentes con fallback automático
+// ══════════════════════════════════════════════════════════
+async function fetchFromDolarapi(url){
+  // Intentar directo primero (dolarapi tiene CORS abierto)
+  const proxies = [
+    u => u,  // directo
+    u => 'https://corsproxy.io/?'+encodeURIComponent(u),
+    u => 'https://api.allorigins.win/get?url='+encodeURIComponent(u),
+    u => 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
+  ];
+  for(const makeUrl of proxies){
+    try{
+      const res=await fetch(makeUrl(url),{signal:AbortSignal.timeout(7000)});
+      if(!res.ok) continue;
+      const text=await res.text();
+      // allorigins/codetabs wraps in {contents:...}
+      let data;
+      try{ const w=JSON.parse(text); data=w.contents?JSON.parse(w.contents):w; }
+      catch(e){ data=JSON.parse(text); }
+      if(Array.isArray(data)&&data.length>0) return data;
+      if(data && !Array.isArray(data)) return data;
+    }catch(e){ /* probar siguiente proxy */ }
+  }
+  throw new Error('Todos los proxies fallaron');
+}
+
+async function fetchTC(){
+  const dot=document.getElementById('dotTC'), st=document.getElementById('stTC');
+  dot.className='dot dload'; st.textContent='TC...';
+  try{
+    // Fuente 1: dolarapi.com (lista completa)
+    let data;
+    try{
+      data=await fetchFromDolarapi('https://dolarapi.com/v1/dolares');
+    }catch(e){
+      // Fuente 2: bluelytics.com.ar (fallback)
+      const bl=await fetchFromDolarapi('https://api.bluelytics.com.ar/v2/latest');
+      const ts=new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+      if(bl.oficial){
+        apiD.oficial=bl.oficial.value_sell;apiD.oficial_c=bl.oficial.value_buy;
+        setTCCard('of',bl.oficial.value_buy,bl.oficial.value_sell,ts);
+      }
+      if(bl.blue){
+        apiD.blue=bl.blue.value_sell;apiD.blue_c=bl.blue.value_buy;
+        setTCCard('bl',bl.blue.value_buy,bl.blue.value_sell,ts);
+      }
+      updateBrechas(); liveCalc(); calcFX(); calcSim();
+      dot.className='dot dok'; st.textContent='TC ✓ '+new Date().toLocaleTimeString('es-AR');
+      return;
+    }
+    data.forEach(d=>{
+      const c=d.casa, vta=parseFloat(d.venta)||0, cmp=parseFloat(d.compra)||0;
+      const ts=d.fechaActualizacion?new Date(d.fechaActualizacion).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      if(c==='oficial'){apiD.oficial=vta;apiD.oficial_c=cmp;setTCCard('of',cmp,vta,ts);}
+      else if(c==='mayorista'){apiD.mayorista=vta;apiD.mayorista_c=cmp;setTCCard('may',cmp,vta,ts);}
+      else if(c==='blue'){apiD.blue=vta;apiD.blue_c=cmp;setTCCard('bl',cmp,vta,ts);}
+      else if(c==='bolsa'||c==='mep'){apiD.mep=vta;setTCSingle('mep',vta,ts);}
+      else if(c==='contadoconliqui'||c==='ccl'){apiD.ccl=vta;setTCSingle('ccl',vta,ts);}
+      else if(c==='divisa'||c==='divisas'){apiD.divisa=vta;apiD.divisa_c=cmp;setTCCard('div',cmp,vta,ts);}
+    });
+    updateBrechas(); liveCalc(); calcFX(); calcSim();
+    dot.className='dot dok'; st.textContent='TC ✓ '+new Date().toLocaleTimeString('es-AR');
+  }catch(e){
+    dot.className='dot derr'; st.textContent='TC error: '+e.message.slice(0,30);
+  }
+}
+
+function setTCCard(k,buy,sell,ts){
+  const bEl=document.getElementById('tc_'+k+'_c');
+  const vEl=document.getElementById('tc_'+k+'_v');
+  const tEl=document.getElementById('tt_'+k);
+  if(bEl)bEl.textContent=buy?'$'+Math.round(buy).toLocaleString('es-AR'):'—';
+  if(vEl)vEl.textContent=sell?'$'+Math.round(sell).toLocaleString('es-AR'):'—';
+  if(tEl)tEl.textContent=ts?'Act: '+ts:'';
+  // key mapping
+  const mapK={of:'oficial',may:'mayorista',bl:'blue',div:'divisa'};
+  const ok=mapK[k];
+  if(ok&&overrides[ok]){
+    const inp=document.getElementById('ov_'+ok);if(inp)inp.value=overrides[ok];
+    document.getElementById('ovlbl_'+ok).style.display='block';
+  }
+}
+function setTCSingle(k,sell,ts){
+  const vEl=document.getElementById('tc_'+k+'_v');
+  const tEl=document.getElementById('tt_'+k);
+  if(vEl)vEl.textContent=sell?'$'+Math.round(sell).toLocaleString('es-AR'):'—';
+  if(tEl)tEl.textContent=ts?'Act: '+ts:'';
+}
+
+function updateBrechas(){
+  const rOf=getTC('oficial'),rMay=getTC('mayorista'),rBl=getTC('blue'),rDiv=getTC('divisa');
+  const el=document.getElementById('brecha_rows');
+  if(!rOf||!rMay){el.innerHTML='<span style="font-size:.7rem;color:var(--dim)">Ingresá cotizaciones...</span>';return;}
+  const items=[
+    ['Blue vs Oficial',rBl&&rOf?((rBl-rOf)/rOf*100):null],
+    ['Blue vs Mayorista',rBl&&rMay?((rBl-rMay)/rMay*100):null],
+    ['Divisa vs Oficial',rDiv&&rOf?((rDiv-rOf)/rOf*100):null],
+    ['Mayorista vs Oficial',rMay&&rOf?((rMay-rOf)/rOf*100):null],
+    ['MEP vs Oficial',apiD.mep&&rOf?((apiD.mep-rOf)/rOf*100):null],
+  ].filter(x=>x[1]!==null);
+  el.innerHTML=items.map(([l,v])=>`<div class="br-row"><span class="br-lbl">${l}</span><span class="br-val" style="color:${v>=0?'var(--orange)':'var(--green2)'}">${v>=0?'+':''}${v.toFixed(1)}%</span></div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  FETCH COMMODITIES — via Vercel Function (proxy server-side, sin API key)
+// ══════════════════════════════════════════════════════════
+function initApiKeyUI(){} // no-op
+
+async function fetchCBOT(){
+  const dot=document.getElementById('dotCB'), st=document.getElementById('stCB');
+  const btn=document.getElementById('btnFetchGrain');
+  const statusEl=document.getElementById('oilStatus');
+  if(btn){btn.disabled=true; btn.textContent='⟳...';}
+  dot.className='dot dload'; st.textContent='Cargando...';
+  if(statusEl){statusEl.style.display='block';statusEl.textContent='⏳ Obteniendo cotizaciones CBOT...';statusEl.style.color='var(--muted)';statusEl.style.background='rgba(30,40,32,.5)';statusEl.style.borderColor='var(--border)';}
+
+  try{
+    const res=await fetch('/api/precios',{signal:AbortSignal.timeout(15000)});
+    if(!res.ok){
+      const e=await res.json().catch(()=>({}));
+      throw new Error(e.error||'HTTP '+res.status);
+    }
+    const data=await res.json();
+    const precios=data.precios||{};
+    const ts=new Date().toLocaleTimeString('es-AR');
+
+    // Mapeo id → elemento HTML
+    const grainMap={
+      sojaI: {lbl:'Soja CBOT',        color:'var(--blue2)'},
+      maizI: {lbl:'Maíz CBOT',        color:'var(--blue2)'},
+      trigoI:{lbl:'Trigo CBOT',       color:'var(--blue2)'},
+      gS:       {lbl:'BCR Rosario',       color:'var(--gold2)'},
+      gM:       {lbl:'BCR Rosario',       color:'var(--gold2)'},
+      gG:       {lbl:'BCR Rosario',       color:'var(--gold2)'},
+      expSoja:  {lbl:'expeller.com.ar',   color:'var(--orange)'},
+      expGirasol:{lbl:'expeller.com.ar',  color:'var(--orange)'},
+    };
+    const oilMap={
+      aSC:{lbl:'ZL CBOT directo',     color:'var(--green2)'},
+      aSR:{lbl:'ZL +4% refino',       color:'var(--green2)'},
+      aMC:{lbl:'estimado maíz',        color:'var(--green2)'},
+      aMR:{lbl:'estimado maíz ref.',   color:'var(--green2)'},
+      aGC:{lbl:'ref. Rotterdam',       color:'var(--green2)'},
+      aGR:{lbl:'ref. Rotterdam ref.', color:'var(--green2)'},
+    };
+
+    // Aplicar Divisa BNA si la función la trajo
+    if(precios.divisa_sell && precios.divisa_sell > 0){
+      apiD.divisa = precios.divisa_sell;
+      apiD.divisa_c = precios.divisa_buy || precios.divisa_sell;
+      const ts2 = new Date().toLocaleTimeString('es-AR');
+      setTCCard('div', apiD.divisa_c, apiD.divisa, ts2);
+      updateBrechas();
+    }
+
+    const expellerIds=new Set(['expSoja','expGirasol']);
+    let ok=0;
+    Object.entries({...grainMap,...oilMap}).forEach(([id,{lbl,color}])=>{
+      const v=precios[id]; if(!v) return;
+      prod[id]=v; lss(PK,prod);
+      const isExp=expellerIds.has(id);
+      const ve=document.getElementById('cv_'+id);
+      if(ve){ve.textContent=isExp?'$ '+Math.round(v).toLocaleString('es-AR'):'U$S '+v.toLocaleString('es-AR');ve.style.color=color;}
+      const se=document.getElementById('cs_'+id);
+      if(se)se.textContent=(isExp?'$/Ton':'U$S/Ton')+' · '+lbl+' · '+ts;
+      const inp=document.getElementById('ci_'+id);
+      if(inp)inp.value=v;
+      ok++;
+    });
+
+    dot.className='dot dok'; st.textContent='Cotiz. ✓ '+ts;
+    if(statusEl){
+      statusEl.textContent='✓ '+ok+' cotizaciones actualizadas · CBOT/stooq.com · '+ts;
+      statusEl.style.color='var(--green2)';
+      statusEl.style.background='rgba(46,184,114,.07)';
+      statusEl.style.borderColor='rgba(46,184,114,.2)';
+    }
+  }catch(e){
+    dot.className='dot derr'; st.textContent='Error cotiz.';
+    if(statusEl){
+      statusEl.textContent='⚠ Error: '+e.message;
+      statusEl.style.color='var(--red2)';
+      statusEl.style.background='rgba(217,79,79,.07)';
+      statusEl.style.borderColor='rgba(217,79,79,.2)';
+    }
+  }
+  if(btn){btn.disabled=false; btn.textContent='⟳ Actualizar precios';}
+  liveCalc();
+}
+
+async function fetchCommoditiesAI(){ await fetchCBOT(); }
+
+// setProd now supports source tracking
+function setProd(k,val,src='manual'){
+  const isExp=(k==='expSoja'||k==='expGirasol');
+  prod[k]=parseFloat(val)||0; lss(PK,prod);
+  const ve=document.getElementById('cv_'+k);
+  if(ve){
+    ve.textContent=prod[k]?(isExp?'$ '+Math.round(prod[k]).toLocaleString('es-AR'):'U$S '+prod[k].toLocaleString('es-AR')):'—';
+    ve.style.color=src==='manual'?'var(--text)':'var(--green2)';
+  }
+  const sub=document.getElementById('cs_'+k);
+  if(sub&&src==='manual') sub.textContent=(isExp?'$/Ton':'U$S/Ton')+' · manual';
+}
+
+// ══════════════════════════════════════════════════════════
+//  COUNTDOWN & REFRESH
+// ══════════════════════════════════════════════════════════
+let cdSecs=300;
+function tickCD(){
+  cdSecs--;
+  if(cdSecs<=0){refreshAll();cdSecs=300;return;}
+  const m=Math.floor(cdSecs/60),s=cdSecs%60;
+  document.getElementById('cdPill').textContent=m+':'+String(s).padStart(2,'0');
+}
+setInterval(tickCD,1000);
+
+async function refreshAll(){
+  document.getElementById('btnUpd').disabled=true;
+  // TC always auto; commodities only if API key present
+  const promises = [fetchTC(), fetchCBOT()];
+  await Promise.all(promises);
+  liveCalc();calcFX();calcSim();
+  cdSecs=300;
+  document.getElementById('btnUpd').disabled=false;
+}
+
+// ══════════════════════════════════════════════════════════
+//  LIVE CALC
+// ══════════════════════════════════════════════════════════
+function liveCalc(){
+  const r=getForm();
+  const box=document.getElementById('liveBox');
+  if(!r.compra){box.style.display='none';return;}
+  box.style.display='';
+  const c=calcRow(r);
+  const na='<span style="opacity:.3">—</span>';
+
+  // Desglose
+  const tonLabel=r.ton?` × ${r.ton}Ton`:'';
+  document.getElementById('liveDes').innerHTML=`
+    <div class="di"><div class="dl">Precio compra/Ton</div><div class="dv">${fmt(r.compra)}</div></div>
+    <div class="di"><div class="dl">Flete</div><div class="dv">${r.flete?fmt(r.flete):na}</div></div>
+    <div class="di"><div class="dl">Servicio/Fasón</div><div class="dv">${r.fason?fmt(r.fason):na}</div></div>
+    <div class="di"><div class="dl">Comisión</div><div class="dv">${r.com?fmt(r.com):na}</div></div>
+    <div class="di"><div class="dl">Gastos eventuales</div><div class="dv">${r.gas?fmt(r.gas):na}</div></div>
+    <div class="di dg"><div class="dl">⚑ COSTO TOTAL/Ton</div><div class="dv">${fmt(c.ct)}</div></div>
+    ${r.ton?`<div class="di dg"><div class="dl">Costo total${tonLabel}</div><div class="dv">${fmt(c.ctTot)}</div></div>`:''}
+    ${c.bAj>0?`<div class="di do"><div class="dl">⚠ Pérdida brecha TC</div><div class="dv">-${fmt(c.bAj)}</div></div>`:''}
+    ${c.bAj>0?`<div class="di dr"><div class="dl">Costo ajustado/Ton</div><div class="dv">${fmt(c.ctAj)}</div></div>`:''}
+  `;
+
+  // FX analysis
+  const rC=getTC(c.tcC), rV=getTC(c.tcV);
+  let fxH='';
+  if(!rC&&c.tcC!=='pesos'){
+    fxH=`<div class="fx-box info"><p class="note">ℹ️ No hay cotización para "${tcLabel(c.tcC)}". Ingresá el valor en la pestaña Mercado → Override manual.</p></div>`;
+  } else if(c.tcC===c.tcV){
+    fxH=`<div class="fx-box ok"><p class="note">✓ Misma moneda de compra y venta (${tcLabel(c.tcC)}). Sin impacto de brecha cambiaria.</p></div>`;
+  } else {
+    const usd=rC?c.ct/rC:0, ctEV=usd*rV, diff=ctEV-c.ct, esMalo=diff>0;
+    fxH=`<div class="fx-box ${esMalo?'warn':'ok'}">
+      <div class="fx-row"><span class="fx-lbl">Proveedor cobra en</span>${tcChip(c.tcC)}<span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">$${Math.round(rC).toLocaleString('es-AR')}/U$S</span></div>
+      <div class="fx-row"><span class="fx-lbl">Comprador paga en</span>${tcChip(c.tcV)}<span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">$${Math.round(rV).toLocaleString('es-AR')}/U$S</span></div>
+      <div class="fx-row"><span class="fx-lbl">Tu costo en dólares</span><span class="chip c-b">${fmtU(usd)}/Ton</span></div>
+      <div class="fx-row"><span class="fx-lbl">Ese costo al TC del comprador</span><span class="chip ${esMalo?'c-r':'c-g'}">${fmt(ctEV)}/Ton</span></div>
+      <div class="fx-row"><span class="fx-lbl"><strong>Diferencia neta por brecha</strong></span>
+        <span class="chip ${esMalo?'c-r':'c-g'}">${esMalo?'▼':'▲'} ${fmt(Math.abs(diff))}/Ton &nbsp;(${(diff/c.ct*100).toFixed(1)}%)</span>
+      </div>
+      <p class="note" style="margin-top:6px">${esMalo
+        ?`⚠ Pagás al ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) pero cobrás al ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Para recomprar los mismos dólares te faltan <strong style="color:var(--red2)">${fmt(Math.abs(diff))}/Ton</strong>. Sumalo al costo antes de negociar.`
+        :`✓ Comprás al ${tcLabel(c.tcC)} y cobrás al ${tcLabel(c.tcV)}. La brecha te suma <strong style="color:var(--green2)">${fmt(Math.abs(diff))}/Ton</strong> extra.`
+      }</p>
+    </div>`;
+  }
+  document.getElementById('liveFX').innerHTML=fxH;
+
+  // Sugerencias
+  document.getElementById('liveSugs').innerHTML=`
+    <div class="sp ${c.bAj>0?'sp-warn':'sp-ok'}">
+      <div class="spl">Punto de equilibrio</div>
+      <div class="spv">${fmt(c.ctAj)}</div>
+      <div class="spvs">sin ganancia sin pérdida</div>
+    </div>
+    <div class="sp"><div class="spl">Precio para +5%</div><div class="spv">${fmt(c.s5)}</div><div class="spvs">mínimo aceptable</div></div>
+    <div class="sp"><div class="spl">Precio para +7.5%</div><div class="spv">${fmt(c.s75)}</div><div class="spvs">recomendado</div></div>
+    <div class="sp"><div class="spl">Precio para +10%</div><div class="spv">${fmt(c.s10)}</div><div class="spvs">objetivo sector</div></div>
+    <div class="sp"><div class="spl">Precio para +15%</div><div class="spv">${fmt(c.s15)}</div><div class="spvs">excelente</div></div>
+  `;
+
+  // Semáforo
+  let semHtml='';
+  if(r.venta!==null&&c.mpAj!==null){
+    const mp=c.mpAj;
+    const color=mp<3?'red':mp<7.5?'yellow':'green';
+    const lbl=mp<0?'Pérdida':mp<3?'Margen crítico':mp<7.5?'Margen bajo':mp<12?'Margen objetivo':'Margen excelente';
+    semHtml=`<div class="semaforo">
+      <div class="sem-dot sem-red ${color==='red'?'active':''}"></div>
+      <div class="sem-dot sem-yellow ${color==='yellow'?'active':''}"></div>
+      <div class="sem-dot sem-green ${color==='green'?'active':''}"></div>
+      <span class="sem-lbl">${lbl} — ${pct(mp)}</span>
+    </div>`;
+  }
+  document.getElementById('semaforo').innerHTML=semHtml;
+
+  // Resultado
+  let resH='';
+  if(r.venta!==null){
+    const pos=c.maAj>=0, col=pos?'var(--green2)':'var(--red2)';
+    const bg=pos?'rgba(46,184,114,.06)':'rgba(217,79,79,.07)';
+    const bd=pos?'rgba(46,184,114,.22)':'rgba(217,79,79,.22)';
+    resH=`<div class="res-box" style="background:${bg};border:1px solid ${bd};margin-top:10px">
+      <div class="rs"><div class="rl">Venta</div><div class="rv" style="color:var(--text)">${fmt(r.venta)}</div></div>
+      <div class="rs"><div class="rl">Costo base</div><div class="rv vgl">${fmt(c.ct)}</div></div>
+      ${c.bAj>0?`<div class="rs"><div class="rl">Pérdida brecha</div><div class="rv" style="color:var(--orange)">-${fmt(c.bAj)}</div></div>`:''}
+      <div class="rs"><div class="rl">${pos?'✓ Ganás':'✗ Perdés'}/Ton</div><div class="rv" style="color:${col};font-size:1.1rem">${fmt(c.maAj)}</div></div>
+      ${r.ton?`<div class="rs"><div class="rl">Total ${r.ton}Ton</div><div class="rv" style="color:${col};font-size:1.1rem">${fmt(c.maAj*r.ton)}</div></div>`:''}
+      <div class="rs"><div class="rl">Rentabilidad</div><div class="rv" style="color:${col};font-size:1.1rem">${pct(c.mpAj)}</div></div>
+    </div>`;
+  }
+  document.getElementById('liveRes').innerHTML=resH;
+}
+
+function getForm(){
+  const fd=document.getElementById('nr_fecha').value;
+  return{
+    cot:document.getElementById('nr_cot').value.trim(),
+    fecha:fd||new Date().toISOString().slice(0,10),
+    prod:document.getElementById('nr_prod').value,
+    ton:parseFloat(document.getElementById('nr_ton').value)||null,
+    compra:parseFloat(document.getElementById('nr_compra').value)||0,
+    tc_c:document.getElementById('nr_tc_c').value,
+    flete:parseFloat(document.getElementById('nr_flete').value)||0,
+    fason:parseFloat(document.getElementById('nr_fason').value)||0,
+    com:parseFloat(document.getElementById('nr_com').value)||0,
+    gas:parseFloat(document.getElementById('nr_gas').value)||0,
+    tc_v:document.getElementById('nr_tc_v').value,
+    venta:parseFloat(document.getElementById('nr_venta').value)||null,
+    prov:document.getElementById('nr_prov').value.trim(),
+    cli:document.getElementById('nr_cli').value.trim(),
+    notas:document.getElementById('nr_notas').value.trim(),
+    savedAt:new Date().toISOString(),
+  };
+}
+
+// ══════════════════════════════════════════════════════════
+//  ROWS
+// ══════════════════════════════════════════════════════════
+function addRow(){
+  const r=getForm();
+  if(!r.compra){alert('Ingresá el Precio de Compra.');return;}
+  rows.push(r);
+  ['nr_cot','nr_compra','nr_flete','nr_fason','nr_venta','nr_prov','nr_cli','nr_notas','nr_ton'].forEach(id=>document.getElementById(id).value='');
+  ['nr_com','nr_gas'].forEach(id=>document.getElementById(id).value='0');
+  document.getElementById('nr_fecha').value=new Date().toISOString().slice(0,10);
+  document.getElementById('liveBox').style.display='none';
+  saveRows(); render();
+  // flash feedback
+  document.getElementById('saveStatus').textContent='✓ Operación guardada! '+new Date().toLocaleTimeString('es-AR');
+}
+
+function removeRow(i){if(!confirm('¿Eliminar esta operación?'))return;rows.splice(i,1);saveRows();render();}
+
+function clearAll(){if(!confirm('¿Borrar TODAS las operaciones? Esto no se puede deshacer.'))return;
+  rows=[];saveRows();render();}
+
+// ══════════════════════════════════════════════════════════
+//  RENDER TABLE (calculadora)
+// ══════════════════════════════════════════════════════════
+function renderTable(){
+  const w=document.getElementById('tableWrap');
+  if(!rows.length){w.innerHTML='<p class="empty-msg">No hay operaciones. Completá el formulario ↑</p>';return;}
+  let sP=0,sF=0,sA=0,sG=0,sT=0,sV=0,sM=0,mC=0,bestMp=-Infinity,worstMp=Infinity,bestIdx=-1,worstIdx=-1;
+  rows.forEach((r,i)=>{const c=calcRow(r);sP+=r.compra;sF+=r.flete;sA+=r.fason;sG+=r.gas;sT+=c.ct;
+    if(r.venta!==null){sV+=r.venta;sM+=c.ma;mC++;
+      if(c.mp>bestMp){bestMp=c.mp;bestIdx=i;}
+      if(c.mp<worstMp){worstMp=c.mp;worstIdx=i;}
+    }});
+  // update summary
+  document.getElementById('s_n').textContent=rows.length;
+  document.getElementById('s_ct').textContent=fmt(sT);
+  document.getElementById('s_ve').textContent=fmt(sV);
+  const mE=document.getElementById('s_ma'),aE=document.getElementById('s_avg'),pE=document.getElementById('s_pct');
+  mE.textContent=fmt(sM); aE.textContent=fmt(mC?sM/mC:0);
+  pE.textContent=sT>0&&mC?((sM/sT)*100).toFixed(1)+'%':'0%';
+  const cls=sM>0?'vg':sM<0?'vr':''; mE.className=aE.className=pE.className='scv '+cls;
+  document.getElementById('s_best').textContent=bestIdx>=0?rows[bestIdx].cot||`Op.${bestIdx+1}`:'—';
+  document.getElementById('s_worst').textContent=worstIdx>=0?rows[worstIdx].cot||`Op.${worstIdx+1}`:'—';
+  document.getElementById('b_ct').textContent=fmt(sT);
+  document.getElementById('b_sug').textContent=fmt(sT*1.075);
+  document.getElementById('b_ve').textContent=fmt(sV);
+  const bm=document.getElementById('b_ma'); bm.textContent=fmt(sM);
+  const bn=document.getElementById('banner'),vd=document.getElementById('verdict');
+  if(!rows.length){bn.className='banner n';vd.className='verdict n';vd.textContent='Sin datos';bm.className='bv vm';}
+  else if(!mC){bn.className='banner n';vd.className='verdict n';vd.textContent='Sin venta real';bm.className='bv vm';}
+  else if(sM>0){bn.className='banner bg';vd.className='verdict g';vd.textContent='✓ Ganancia';bm.className='bv vg';}
+  else{bn.className='banner br';vd.className='verdict r';vd.textContent='✗ Pérdida';bm.className='bv vr';}
+
+  const na='<span style="opacity:.3">—</span>';
+  let h=`<table class="rtab"><thead><tr>
+    <th style="text-align:left">Fecha / N°</th><th style="text-align:left">Producto</th>
+    <th>Ton</th><th>TC Compra</th><th>Costo/Ton</th><th>TC Venta</th>
+    <th>Venta Real</th><th style="color:var(--gold2)">Gan./Ton</th><th>%</th><th></th><th></th>
+  </tr></thead><tbody>`;
+  rows.forEach((r,i)=>{
+    const c=calcRow(r), mc=c.maAj===null?'':(c.maAj>=0?'vg':'vr');
+    h+=`<tr>
+      <td><span style="font-size:.65rem;color:var(--muted)">${r.fecha||'—'}</span><br>${r.cot||`Op.${i+1}`}</td>
+      <td><span style="font-size:.7rem;color:var(--muted)">${r.prod}</span>${r.cli?`<br><span style="font-size:.6rem;color:var(--dim)">${r.cli}</span>`:''}</td>
+      <td>${r.ton||na}</td>
+      <td style="text-align:center">${tcChip(r.tc_c)}</td>
+      <td class="vgl">${fmt(c.ct)}</td>
+      <td style="text-align:center">${tcChip(r.tc_v)}</td>
+      <td>${r.venta!==null?fmt(r.venta):na}</td>
+      <td class="${mc}">${fmt(c.maAj)}</td>
+      <td class="${mc}">${pct(c.mpAj)}</td>
+      <td><button class="btn" style="padding:3px 8px;font-size:.65rem;background:rgba(61,143,224,.1);border:1px solid rgba(61,143,224,.2);color:var(--blue2);" onclick="showDetail(${i})">👁</button></td>
+      <td><button class="btn btn-d" onclick="removeRow(${i})">✕</button></td>
+    </tr>`;
+  });
+  h+=`</tbody><tfoot><tr class="frow">
+    <td colspan="2">TOTAL (${rows.length} op.)</td>
+    <td>—</td><td>—</td>
+    <td>${fmt(sT)}</td><td>—</td><td>${fmt(sV)}</td>
+    <td class="${sM>=0?'vg':'vr'}">${fmt(sM)}</td>
+    <td class="${sM>=0?'vg':'vr'}">${sT>0&&mC?((sM/sT)*100).toFixed(1)+'%':'—'}</td>
+    <td></td><td></td>
+  </tr></tfoot></table>`;
+  w.innerHTML=h;
+}
+
+// ══════════════════════════════════════════════════════════
+//  DASHBOARD
+// ══════════════════════════════════════════════════════════
+function renderDash(){
+  const closed=rows.filter(r=>r.venta!==null);
+  const kpiEl=document.getElementById('kpiGrid');
+  if(!rows.length){kpiEl.innerHTML='<p class="empty-msg">Cargá operaciones para ver métricas.</p>';
+    document.getElementById('chartArea').innerHTML='<p class="empty-msg">Sin datos aún.</p>';
+    document.getElementById('distArea').innerHTML='<p class="empty-msg">Sin datos aún.</p>';
+    return;}
+  let totCT=0,totVe=0,totMa=0,totTon=0;
+  rows.forEach(r=>{const c=calcRow(r);totCT+=c.ct;if(r.venta!==null){totVe+=r.venta;totMa+=c.maAj;}if(r.ton)totTon+=r.ton;});
+  const rentab=totCT>0&&closed.length?((totMa/totCT)*100):0;
+  const avgMa=closed.length?totMa/closed.length:0;
+  const pendientes=rows.filter(r=>r.venta===null).length;
+  kpiEl.innerHTML=`
+    <div class="kpi kpi-gold"><div class="kpi-lbl">Operaciones</div><div class="kpi-val" style="color:var(--gold2)">${rows.length}</div><div class="kpi-sub">${closed.length} cerradas · ${pendientes} pendientes</div></div>
+    <div class="kpi kpi-green"><div class="kpi-lbl">Ganancia Total</div><div class="kpi-val" style="color:${totMa>=0?'var(--green2)':'var(--red2)'}">${fmt(totMa)}</div><div class="kpi-sub">Operaciones cerradas</div></div>
+    <div class="kpi kpi-blue"><div class="kpi-lbl">Rentabilidad</div><div class="kpi-val" style="color:${rentab>=7.5?'var(--green2)':rentab>=3?'var(--orange)':'var(--red2)'}">${rentab.toFixed(1)}%</div><div class="kpi-sub">${rentab>=7.5?'Objetivo cumplido':rentab>=3?'Por debajo del obj.':'Crítica'}</div></div>
+    <div class="kpi kpi-orange"><div class="kpi-lbl">Margen Prom./Op</div><div class="kpi-val" style="color:var(--orange)">${fmt(avgMa)}</div><div class="kpi-sub">Por tonelada promedio</div></div>
+    <div class="kpi kpi-gold"><div class="kpi-lbl">Toneladas</div><div class="kpi-val" style="color:var(--gold2)">${totTon||'—'}</div><div class="kpi-sub">Total registradas</div></div>
+    <div class="kpi kpi-green"><div class="kpi-lbl">Σ Venta</div><div class="kpi-val" style="color:var(--text)">${fmt(totVe)}</div><div class="kpi-sub">Ventas cerradas</div></div>
+  `;
+
+  // Bar chart
+  const chartEl=document.getElementById('chartArea');
+  const closedRows=rows.filter(r=>r.venta!==null);
+  if(!closedRows.length){chartEl.innerHTML='<p class="empty-msg">Sin operaciones cerradas.</p>';return;}
+  const maxMp=Math.max(...closedRows.map(r=>Math.abs(calcRow(r).mpAj||0)))||1;
+  chartEl.innerHTML=`<div class="chart-wrap">
+    <div class="chart-title">Rentabilidad % por operación</div>
+    <div class="mini-chart" style="height:80px">
+      ${closedRows.slice(-20).map(r=>{
+        const c=calcRow(r), mp=c.mpAj||0;
+        const h=Math.max(2,Math.abs(mp)/maxMp*76);
+        const col=mp<0?'var(--red2)':mp<5?'var(--orange)':mp<10?'var(--gold2)':'var(--green2)';
+        return`<div class="bar-wrap"><div class="bar" style="height:${h}px;background:${col}" title="${r.cot||'Op'}: ${mp.toFixed(1)}%"></div><div class="bar-lbl">${(r.cot||r.fecha||'').slice(-6)}</div></div>`;
+      }).join('')}
+    </div>
+  </div>`;
+
+  // Dist
+  const distEl=document.getElementById('distArea');
+  const byProd={};
+  rows.forEach(r=>{byProd[r.prod]=(byProd[r.prod]||0)+1;});
+  distEl.innerHTML=`<div class="comm-grid">
+    ${Object.entries(byProd).map(([p,n])=>`<div class="cc"><div class="cc-name">${p}</div><div class="cc-val" style="color:var(--blue2)">${n}</div><div class="cc-sub">operaciones</div></div>`).join('')}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  HISTORIAL
+// ══════════════════════════════════════════════════════════
+function renderHist(){
+  const w=document.getElementById('histWrap');
+  const txt=(document.getElementById('flt_txt').value||'').toLowerCase();
+  const filterProd=document.getElementById('flt_prod').value;
+  const res=document.getElementById('flt_res').value;
+  const desde=document.getElementById('flt_desde').value;
+  const hasta=document.getElementById('flt_hasta').value;
+
+  let filtered=rows.filter((r,i)=>{
+    if(filterProd&&r.prod!==filterProd)return false;
+    if(txt&&![r.cot,r.prod,r.cli,r.prov,r.notas].join(' ').toLowerCase().includes(txt))return false;
+    if(desde&&r.fecha<desde)return false;
+    if(hasta&&r.fecha>hasta)return false;
+    const c=calcRow(r);
+    if(res==='g'&&(r.venta===null||c.maAj<0))return false;
+    if(res==='r'&&(r.venta===null||c.maAj>=0))return false;
+    if(res==='p'&&r.venta!==null)return false;
+    return true;
+  });
+
+  if(!filtered.length){w.innerHTML='<p class="empty-msg">Sin resultados para los filtros aplicados.</p>';
+    document.getElementById('histStats').innerHTML='';return;}
+
+  let h=`<table class="rtab"><thead><tr>
+    <th style="text-align:left">Fecha</th><th style="text-align:left">N° / Prod.</th>
+    <th>Ton</th><th>Proveedor</th><th>Cliente</th><th>TC Compra</th>
+    <th>Costo/Ton</th><th>TC Venta</th><th>Venta</th>
+    <th>Gan./Ton</th><th>%</th><th>Estado</th><th></th>
+  </tr></thead><tbody>`;
+
+  filtered.forEach((r,fi)=>{
+    const ri=rows.indexOf(r);
+    const c=calcRow(r), mc=c.maAj===null?'':(c.maAj>=0?'vg':'vr');
+    const tag=r.venta===null?`<span class="tag tag-pend">Pendiente</span>`:(c.maAj>=0?`<span class="tag tag-new">Cerrada ✓</span>`:`<span class="tag" style="background:rgba(217,79,79,.1);color:var(--red2)">Pérdida</span>`);
+    h+=`<tr>
+      <td class="vm">${r.fecha||'—'}</td>
+      <td>${r.cot||`Op.${ri+1}`}<br><span style="font-size:.62rem;color:var(--dim)">${r.prod}</span></td>
+      <td>${r.ton||'—'}</td>
+      <td class="vm">${r.prov||'—'}</td>
+      <td class="vm">${r.cli||'—'}</td>
+      <td style="text-align:center">${tcChip(r.tc_c)}</td>
+      <td class="vgl">${fmt(c.ct)}</td>
+      <td style="text-align:center">${tcChip(r.tc_v)}</td>
+      <td>${r.venta!==null?fmt(r.venta):'<span style="opacity:.3">—</span>'}</td>
+      <td class="${mc}">${fmt(c.maAj)}</td>
+      <td class="${mc}">${pct(c.mpAj)}</td>
+      <td>${tag}</td>
+      <td><button class="btn" style="padding:3px 8px;font-size:.65rem;background:rgba(61,143,224,.1);border:1px solid rgba(61,143,224,.2);color:var(--blue2);" onclick="showDetail(${ri})">👁</button></td>
+    </tr>`;
+  });
+  h+=`</tbody></table>`;
+  w.innerHTML=h;
+
+  // Stats
+  const totM=filtered.reduce((a,r)=>{const c=calcRow(r);return a+(c.maAj||0);},0);
+  const cerradas=filtered.filter(r=>r.venta!==null);
+  document.getElementById('histStats').innerHTML=`
+    <div class="scards" style="grid-template-columns:repeat(auto-fill,minmax(110px,1fr))">
+      <div class="sc"><div class="scl">Mostrando</div><div class="scv" style="color:var(--gold2)">${filtered.length}</div></div>
+      <div class="sc"><div class="scl">Cerradas</div><div class="scv">${cerradas.length}</div></div>
+      <div class="sc"><div class="scl">Ganancia filtro</div><div class="scv ${totM>=0?'vg':'vr'}">${fmt(totM)}</div></div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  MODAL DETALLE
+// ══════════════════════════════════════════════════════════
+function showDetail(i){
+  const r=rows[i], c=calcRow(r);
+  const rOf=getTC('oficial'),rMay=getTC('mayorista'),rBl=getTC('blue');
+  const rC=getTC(c.tcC), rV=getTC(c.tcV);
+  const usd=rC?c.ct/rC:null;
+  document.getElementById('modalContent').innerHTML=`
+    <div class="modal-hdr">
+      <div class="modal-title">Detalle · ${r.cot||`Operación ${i+1}`}</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    ${[
+      ['Fecha',r.fecha||'—'],
+      ['Producto',r.prod],
+      ['Cantidad',r.ton?r.ton+' Ton':'—'],
+      ['Proveedor',r.prov||'—'],
+      ['Cliente / Comprador',r.cli||'—'],
+      ['──── COSTOS ────',''],
+      ['Precio de compra',fmt(r.compra)+'/Ton'],
+      ['Flete',fmt(r.flete)+'/Ton'],
+      ['Servicio / Fasón',fmt(r.fason)+'/Ton'],
+      ['Comisión',fmt(r.com)+'/Ton'],
+      ['Gastos eventuales',fmt(r.gas)+'/Ton'],
+      ['TC Compra (proveedor)',tcLabel(c.tcC)+' · $'+Math.round(rC).toLocaleString('es-AR')],
+      ['Costo total / Ton',`<strong style="color:var(--gold2)">${fmt(c.ct)}</strong>`],
+      r.ton?['Costo total '+r.ton+'Ton',`<strong style="color:var(--gold2)">${fmt(c.ct*r.ton)}</strong>`]:null,
+      usd?['Costo en U$S',fmtU(usd)+'/Ton']:null,
+      c.bAj>0?['Pérdida por brecha TC',`<span style="color:var(--orange)">-${fmt(c.bAj)}/Ton</span>`]:null,
+      c.bAj>0?['Costo ajustado',`<strong style="color:var(--red2)">${fmt(c.ctAj)}/Ton</strong>`]:null,
+      ['──── VENTA ────',''],
+      ['TC Venta (comprador)',tcLabel(c.tcV)+' · $'+Math.round(rV).toLocaleString('es-AR')],
+      ['Precio sugerido +7.5%',fmt(c.s75)+'/Ton'],
+      ['Precio venta real',r.venta!==null?fmt(r.venta)+'/Ton':'<span style="opacity:.5">Sin venta aún</span>'],
+      r.venta!==null?['Ganancia / Ton',`<strong style="color:${c.maAj>=0?'var(--green2)':'var(--red2)'}">${fmt(c.maAj)}</strong>`]:null,
+      r.ton&&r.venta!==null?['Ganancia total',`<strong style="color:${c.maAj>=0?'var(--green2)':'var(--red2)'}">${fmt(c.maAj*r.ton)}</strong>`]:null,
+      r.venta!==null?['Rentabilidad real',`<strong style="color:${c.mpAj>=0?'var(--green2)':'var(--red2)'}">${pct(c.mpAj)}</strong>`]:null,
+      r.notas?['──── NOTAS ────','']:null,
+      r.notas?['',r.notas]:null,
+      ['Guardado',new Date(r.savedAt||Date.now()).toLocaleString('es-AR')],
+    ].filter(Boolean).map(([l,v])=>l.startsWith('────')?`<div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--dim);padding:8px 0 4px;letter-spacing:.1em">${l}</div>`:`<div class="detail-row"><span class="detail-lbl">${l}</span><span class="detail-val">${v}</span></div>`).join('')}
+  `;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+function closeModal(){document.getElementById('modalOverlay').classList.remove('open');}
+
+// ══════════════════════════════════════════════════════════
+//  CONVERSOR & SIMULADOR
+// ══════════════════════════════════════════════════════════
+function calcFX(){
+  const m=parseFloat(document.getElementById('fx_m').value)||0;
+  const o=document.getElementById('fx_o').value;
+  const div=document.getElementById('fxMatrix');
+  if(!m){div.innerHTML='';return;}
+  const rOf=getTC('oficial'),rMay=getTC('mayorista'),rBl=getTC('blue'),rDiv=getTC('divisa');
+  if(!rOf||!rMay){div.innerHTML='<p class="note">Ingresá cotizaciones en la pestaña Mercado.</p>';return;}
+  const useDiv=o==='usd_divisa'&&rDiv;
+  const useBl=o==='usd_blue'&&rBl;
+  let pesos=o==='ars'?m:useDiv?m*rDiv:o==='usd_oficial'?m*rOf:o==='usd_mayorista'?m*rMay:useBl?m*rBl:m*rOf;
+  const br=(r1,r2)=>r1&&r2?((r1-r2)/r2*100).toFixed(1)+'%':'—';
+  const bc=(r1,r2)=>(!r1||!r2)?'var(--dim)':(r1>=r2?'var(--orange)':'var(--green2)');
+  div.innerHTML=`
+    <div class="fxc"><div class="fxcl">Pesos ARS</div><div class="fxcv" style="color:var(--gold2)">${fmt(pesos)}</div></div>
+    <div class="fxc" style="border-top:2px solid var(--green)"><div class="fxcl">U$S Oficial BNA</div><div class="fxcv vg">${fmtU(pesos/rOf)}</div><div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dim)">$${Math.round(rOf).toLocaleString('es-AR')}/U$S</div></div>
+    ${rDiv?`<div class="fxc" style="border-top:2px solid var(--green)"><div class="fxcl">U$S Divisa BNA</div><div class="fxcv vg">${fmtU(pesos/rDiv)}</div><div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dim)">$${Math.round(rDiv).toLocaleString('es-AR')}/U$S</div></div>`:''}
+    <div class="fxc" style="border-top:2px solid var(--blue)"><div class="fxcl">U$S Mayorista</div><div class="fxcv vb">${fmtU(pesos/rMay)}</div><div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dim)">$${Math.round(rMay).toLocaleString('es-AR')}/U$S</div></div>
+    ${rBl?`<div class="fxc" style="border-top:2px solid var(--purple)"><div class="fxcl">U$S Blue</div><div class="fxcv" style="color:#c4b0f5">${fmtU(pesos/rBl)}</div><div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--dim)">$${Math.round(rBl).toLocaleString('es-AR')}/U$S</div></div>`:''}
+    <div class="fxc"><div class="fxcl">Blue vs Oficial</div><div class="fxcv" style="color:${bc(rBl,rOf)}">${br(rBl,rOf)}</div></div>
+    ${rDiv?`<div class="fxc"><div class="fxcl">Divisa vs Oficial</div><div class="fxcv" style="color:${bc(rDiv,rOf)}">${br(rDiv,rOf)}</div></div>`:''}
+    <div class="fxc"><div class="fxcl">Mayorista vs Oficial</div><div class="fxcv" style="color:${bc(rMay,rOf)}">${br(rMay,rOf)}</div></div>`;
+}
+
+function calcSim(){
+  const p=parseFloat(document.getElementById('sim_p').value)||0;
+  const tcP=document.getElementById('sim_prov').value;
+  const tcC=document.getElementById('sim_comp').value;
+  const div=document.getElementById('simResult');
+  if(!p){div.innerHTML='';return;}
+  const rP=getTC(tcP), rC=getTC(tcC);
+  if((!rP&&tcP!=='pesos')||(!rC&&tcC!=='pesos')){div.innerHTML='<p class="note">Necesitás las cotizaciones cargadas.</p>';return;}
+  const rPv=tcP==='pesos'?1:rP, rCv=tcC==='pesos'?1:rC;
+  const usd=tcP!=='pesos'?p/rPv:p;
+  const pesosComp=tcC!=='pesos'?usd*rCv:p;
+  const diff=pesosComp-p, esMalo=diff<0;
+  div.innerHTML=`<div class="fx-box ${esMalo?'warn':'ok'}">
+    <div class="fx-row"><span class="fx-lbl">Precio pactado</span>${tcChip(tcP)}<span class="chip c-gold">${fmt(p)}/Ton</span></div>
+    <div class="fx-row"><span class="fx-lbl">Equivalente en dólares</span><span class="chip c-b">${fmtU(usd)}/Ton</span></div>
+    <div class="fx-row"><span class="fx-lbl">Comprador paga al ${tcLabel(tcC)}</span><span class="chip ${tcC==='oficial'?'c-g':tcC==='mayorista'?'c-b':tcC==='blue'?'c-p':'c-gold'}">${fmt(pesosComp)}/Ton</span></div>
+    <div class="fx-row"><span class="fx-lbl"><strong>Diferencia neta</strong></span>
+      <span class="chip ${esMalo?'c-r':'c-g'}">${diff>=0?'+':''}${fmt(diff)} (${(diff/p*100)>=0?'+':''}${(diff/p*100).toFixed(1)}%)</span>
+      <span class="chip ${esMalo?'c-r':'c-g'}">${esMalo?'⚠ Perdés':'✓ Ganás'} por brecha</span>
+    </div>
+    <p class="note" style="margin-top:7px">${esMalo
+      ?`Proveedor cobra al ${tcLabel(tcP)} ($${Math.round(rPv).toLocaleString('es-AR')}/U$S). Comprador paga al ${tcLabel(tcC)} ($${Math.round(rCv).toLocaleString('es-AR')}/U$S). <strong style="color:var(--red2)">Perdés ${fmt(Math.abs(diff))}/Ton (${Math.abs(diff/p*100).toFixed(1)}%)</strong> solo por la brecha. Sumá este monto al costo.`
+      :`Comprás al ${tcLabel(tcP)} y cobrás al ${tcLabel(tcC)}. La brecha te suma <strong style="color:var(--green2)">${fmt(Math.abs(diff))}/Ton</strong> extra.`
+    }
+  </div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  EXPORT CSV
+// ══════════════════════════════════════════════════════════
+function exportCSV(){
+  if(!rows.length){alert('No hay operaciones para exportar.');return;}
+  const headers=['Fecha','N° Cot','Producto','Toneladas','Proveedor','Cliente',
+    'Precio Compra','TC Compra','Flete','Servicio/Fazon','Comision','Gastos',
+    'Costo Total/Ton','TC Venta','Precio Venta','Ganancia/Ton','Rentabilidad%','Notas','Guardado'];
+  const lines=rows.map(r=>{
+    const c=calcRow(r);
+    return[
+      r.fecha||'',r.cot||'',r.prod,r.ton||'',r.prov||'',r.cli||'',
+      r.compra,tcLabel(r.tc_c),r.flete,r.fason,r.com,r.gas,
+      Math.round(c.ct),tcLabel(r.tc_v),
+      r.venta||'',c.maAj!==null?Math.round(c.maAj):'',
+      c.mpAj!==null?c.mpAj.toFixed(1):'',
+      (r.notas||'').replace(/,/g,';'),
+      r.savedAt?new Date(r.savedAt).toLocaleString('es-AR'):'',
+    ].join(',');
+  });
+  const csv='\uFEFF'+[headers.join(','),...lines].join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download='alborada_operaciones_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+// ══════════════════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════════════════
+function showTab(id){
+  ['mercado','calc','dash','hist','conversor','info'].forEach((t,i)=>{
+    document.getElementById('tab-'+t).classList.toggle('active',t===id);
+    document.querySelectorAll('.tab')[i].classList.toggle('active',t===id);
+  });
+  if(id==='dash')renderDash();
+  if(id==='hist')renderHist();
+}
+
+// ══════════════════════════════════════════════════════════
+//  SAMPLE DATA
+// ══════════════════════════════════════════════════════════
+function addSample(){
+  rows=[
+    {cot:'ALB-26-5084',fecha:'2026-02-15',prod:'Aceite Soja Refinado',ton:20,compra:1020,tc_c:'blue',flete:78,fason:160,com:0,gas:25,tc_v:'mayorista',venta:1215,prov:'Molinos Río de la Plata',cli:'Distribuidora Norte SA',notas:'Entrega en planta, pago 30 días',savedAt:new Date().toISOString()},
+    {cot:'ALB-26-9585',fecha:'2026-02-18',prod:'Aceite Maíz Refinado',ton:15,compra:1234,tc_c:'oficial',flete:78,fason:160,com:0,gas:40,tc_v:'mayorista',venta:1512,prov:'Arcor SA',cli:'Supermercados Vea',notas:'Factura A - precio dólar oficial del día',savedAt:new Date().toISOString()},
+    {cot:'ALB-26-0312',fecha:'2026-02-20',prod:'Aceite Girasol Crudo',ton:30,compra:955,tc_c:'mayorista',flete:70,fason:160,com:0,gas:30,tc_v:'mayorista',venta:1230,prov:'Aceitera Gral. Deheza',cli:'Industrias Alimenticias SRL',notas:'',savedAt:new Date().toISOString()},
+    {cot:'ALB-26-0440',fecha:'2026-02-25',prod:'Aceite Soja Crudo',ton:25,compra:980,tc_c:'blue',flete:78,fason:160,com:0,gas:20,tc_v:'oficial',venta:null,prov:'Bunge Argentina',cli:'Pendiente cierre',notas:'Cotización vigente hasta 27/02',savedAt:new Date().toISOString()},
+  ];
+  saveRows(); render(); showTab('calc');
+}
+
+function render(){renderTable(); renderDash(); renderHist();}
+
+// ══════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════
+// Set today's date as default
+document.getElementById('nr_fecha').value=new Date().toISOString().slice(0,10);
+
+// Restore overrides
+Object.keys(overrides).forEach(k=>{
+  const el=document.getElementById('ov_'+k); if(el&&overrides[k])el.value=overrides[k];
+  const lbl=document.getElementById('ovlbl_'+k); if(lbl&&overrides[k])lbl.style.display='block';
+});
+
+// Restore saved commodity values
+const pKeys=['aSC','aSR','aMC','aMR','aGC','aGR','gS','gM','gG','sojaI','maizI','trigoI','expSoja','expGirasol'];
+pKeys.forEach(k=>{
+  if(prod[k]){
+    const isExp=(k==='expSoja'||k==='expGirasol');
+    const inp=document.getElementById('ci_'+k); if(inp)inp.value=prod[k];
+    const ve=document.getElementById('cv_'+k); if(ve)ve.textContent=isExp?'$ '+Math.round(prod[k]).toLocaleString('es-AR'):'U$S '+prod[k].toLocaleString('es-AR');
+  }
+});
+
+// Init API key UI
+initApiKeyUI();
+
+render();
+refreshAll();
+</script>
+</body>
+</html>
