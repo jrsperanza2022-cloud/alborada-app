@@ -7,6 +7,7 @@ module.exports = async function handler(req, res) {
   const out = {};
   const errors = [];
 
+  // ── 1. CBOT via stooq.com ──────────────────────────────
   const stooqSymbols = [
     { sym: 'zs.f', id: 'sojaI',  factor: 36.744 / 100 },
     { sym: 'zc.f', id: 'maizI',  factor: 39.368 / 100 },
@@ -39,24 +40,73 @@ module.exports = async function handler(req, res) {
     } catch (e) { errors.push('stooq/' + sym + ': ' + e.message); }
   }
 
+  // ── 2. Dolar Divisa BNA via dolarapi.com ───────────────
   try {
-    const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares', {
+    const r = await fetch('https://dolarapi.com/v1/dolares', {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000)
     });
     if (r.ok) {
       const data = await r.json();
-      const divisa = data.find(function(d) { return d.casa && d.casa.toLowerCase().includes('divisa'); });
+      const divisa = data.find(function(d) {
+        return d.casa && (d.casa.toLowerCase() === 'divisas' || d.casa.toLowerCase() === 'divisa');
+      });
       if (divisa && divisa.venta > 0) {
         out.divisa_sell = divisa.venta;
         out.divisa_buy  = divisa.compra || divisa.venta;
+      } else {
+        errors.push('dolarapi: divisa no encontrada en lista');
       }
+    } else {
+      errors.push('dolarapi HTTP ' + r.status);
     }
-  } catch (e) { errors.push('argentinadatos: ' + e.message); }
+  } catch (e) { errors.push('dolarapi: ' + e.message); }
 
+  // ── 3. Expeller via expeller.com.ar ────────────────────
+  try {
+    const r = await fetch('http://www.expeller.com.ar/pizarra.asp', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html',
+        'Accept-Language': 'es-AR,es;q=0.9',
+      },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (r.ok) {
+      const html = await r.text();
+
+      const findPrice = function(keyword) {
+        const idx = html.toLowerCase().indexOf(keyword.toLowerCase());
+        if (idx === -1) return null;
+        const chunk = html.slice(idx, idx + 600);
+        const nums = chunk.match(/\b(\d{5,7})\b/g);
+        if (!nums) return null;
+        for (var i = 0; i < nums.length; i++) {
+          const v = parseInt(nums[i], 10);
+          if (v >= 50000 && v <= 9999999) return v;
+        }
+        return null;
+      };
+
+      const expSoja    = findPrice('Expeller de Soja')    || findPrice('Exp.Soja')    || findPrice('Soja');
+      const expGirasol = findPrice('Expeller de Girasol') || findPrice('Exp.Girasol') || findPrice('Girasol');
+
+      if (expSoja)    out.expSoja    = expSoja;
+      if (expGirasol) out.expGirasol = expGirasol;
+      if (!expSoja && !expGirasol) errors.push('expeller: no se encontraron precios');
+    } else {
+      errors.push('expeller HTTP ' + r.status);
+    }
+  } catch (e) { errors.push('expeller: ' + e.message); }
+
+  // ── 4. Granos Rosario via BCR ──────────────────────────
   try {
     const r = await fetch('https://www.bcr.com.ar/es/mercados/cotizaciones/granos', {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' },
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html',
+        'Accept-Language': 'es-AR,es;q=0.9',
+      },
       signal: AbortSignal.timeout(10000)
     });
     if (r.ok) {
@@ -74,9 +124,12 @@ module.exports = async function handler(req, res) {
       if (s) out.gS = s;
       if (m) out.gM = m;
       if (g) out.gG = g;
+    } else {
+      errors.push('BCR HTTP ' + r.status);
     }
   } catch (e) { errors.push('BCR: ' + e.message); }
 
+  // ── 5. Fallback granos desde CBOT ─────────────────────
   if (!out.gS && out.sojaI)  out.gS = Math.round(out.sojaI  * 0.88);
   if (!out.gM && out.maizI)  out.gM = Math.round(out.maizI  * 0.90);
   if (!out.gG && out.trigoI) out.gG = Math.round(out.trigoI * 0.92);
