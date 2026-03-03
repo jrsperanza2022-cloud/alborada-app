@@ -39,56 +39,23 @@ module.exports = async function handler(req, res) {
     } catch (e) { errors.push('stooq/' + sym + ': ' + e.message); }
   }
 
-  // ── 2. Dolar Divisa BNA via Ambito ─────────────────────
+  // ── 2. Dolar Divisa BNA via argentinadatos ─────────────
   try {
-    const r = await fetch('https://mercados.ambito.com/dolar/divisa/variacion', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-        'Accept': 'application/json',
-        'Referer': 'https://www.ambito.com/',
-        'Origin': 'https://www.ambito.com',
-      },
+    const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/divisa', {
+      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000)
     });
     if (r.ok) {
-      const d = await r.json();
-      // Ambito devuelve { compra: "1.385,00", venta: "1.435,00" }
-      const parseAmbito = function(s) {
-        if (!s) return 0;
-        return parseFloat(String(s).replace(/\./g, '').replace(',', '.'));
-      };
-      const sell = parseAmbito(d.venta);
-      const buy  = parseAmbito(d.compra);
-      if (sell > 500 && sell < 9999) {
-        out.divisa_sell = sell;
-        out.divisa_buy  = buy || sell;
-      } else {
-        errors.push('ambito divisa: valor fuera de rango: ' + JSON.stringify(d).slice(0, 80));
-      }
-    } else {
-      errors.push('ambito divisa HTTP ' + r.status);
-    }
-  } catch (e) { errors.push('ambito divisa: ' + e.message); }
+      const data = await r.json();
+      const last = Array.isArray(data) ? data[data.length - 1] : data;
+      if (last && last.venta > 0) {
+        out.divisa_sell = last.venta;
+        out.divisa_buy  = last.compra || last.venta;
+      } else { errors.push('argentinadatos divisa: sin datos validos'); }
+    } else { errors.push('argentinadatos divisa HTTP ' + r.status); }
+  } catch (e) { errors.push('argentinadatos divisa: ' + e.message); }
 
-  // Fallback divisa: argentinadatos historico
-  if (!out.divisa_sell) {
-    try {
-      const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/divisa', {
-        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(8000)
-      });
-      if (r.ok) {
-        const data = await r.json();
-        const last = Array.isArray(data) ? data[data.length - 1] : data;
-        if (last && last.venta > 0) {
-          out.divisa_sell = last.venta;
-          out.divisa_buy  = last.compra || last.venta;
-        } else { errors.push('argentinadatos divisa: sin datos'); }
-      } else { errors.push('argentinadatos divisa HTTP ' + r.status); }
-    } catch (e) { errors.push('argentinadatos divisa: ' + e.message); }
-  }
-
-  // ── 3. Expeller directo — Vercel puede hacer HTTP ──────
+  // ── 3. Expeller via expeller.com.ar ────────────────────
   try {
     const r = await fetch('http://www.expeller.com.ar/pizarra.asp', {
       headers: {
@@ -100,23 +67,24 @@ module.exports = async function handler(req, res) {
     });
     if (r.ok) {
       const html = await r.text();
+      const lower = html.toLowerCase();
 
-      // Precios argentinos pueden tener puntos de miles: "89.500" o "89500"
-      // Busca el precio más cercano al keyword, acepta formatos: 89500 / 89.500 / 89,500
       const findPrice = function(keyword) {
-        const lower = html.toLowerCase();
-        const idx = lower.indexOf(keyword.toLowerCase());
-        if (idx === -1) return null;
-        // Busca hasta 1000 chars alrededor del keyword
-        const chunk = html.slice(Math.max(0, idx - 100), idx + 1000);
-        // Matchea números con o sin separador de miles: 89.500 o 89500 o 89,500
-        const re = /\b(\d{2,3}[.,]\d{3}|\d{5,7})\b/g;
-        let m;
-        while ((m = re.exec(chunk)) !== null) {
-          // Normaliza: quita puntos de miles, reemplaza coma decimal
-          const raw = m[1].replace(/\./g, '').replace(',', '');
-          const v = parseInt(raw, 10);
-          if (v >= 30000 && v <= 9999999) return v;
+        // Busca bloque "expeller" que contenga el keyword
+        let idx = lower.indexOf('expeller');
+        while (idx !== -1) {
+          const block = lower.slice(idx, idx + 200);
+          if (block.includes(keyword.toLowerCase())) {
+            const chunk = html.slice(idx, idx + 600);
+            const re = /\b(\d{2,3}[.,]\d{3}|\d{5,7})\b/g;
+            let m;
+            while ((m = re.exec(chunk)) !== null) {
+              const raw = m[1].replace(/\./g, '').replace(',', '');
+              const v = parseInt(raw, 10);
+              if (v >= 30000 && v <= 9999999) return v;
+            }
+          }
+          idx = lower.indexOf('expeller', idx + 1);
         }
         return null;
       };
@@ -125,7 +93,7 @@ module.exports = async function handler(req, res) {
       const expGirasol = findPrice('girasol');
       if (expSoja)    out.expSoja    = expSoja;
       if (expGirasol) out.expGirasol = expGirasol;
-      if (!expSoja && !expGirasol) errors.push('expeller: no se encontraron precios (html len=' + html.length + ')');
+      if (!expSoja && !expGirasol) errors.push('expeller: precios no encontrados');
     } else { errors.push('expeller HTTP ' + r.status); }
   } catch (e) { errors.push('expeller: ' + e.message); }
 
