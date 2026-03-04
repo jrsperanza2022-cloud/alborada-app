@@ -524,9 +524,9 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
         </select>
       </div>
       <div class="field"><label>Cantidad (Ton)</label><input type="number" id="nr_ton" placeholder="Ej: 20" oninput="liveCalc()"></div>
-      <div class="field"><label>💰 Precio Compra ($/Ton)</label><input type="number" id="nr_compra" placeholder="Ej: 1.020" oninput="liveCalc()"></div>
+      <div class="field"><label id="lbl_compra">💰 Precio Compra (U$S/Ton)</label><input type="number" id="nr_compra" placeholder="Ej: 1000" oninput="liveCalc()"></div>
       <div class="field"><label>💵 Proveedor cobra en</label>
-        <select id="nr_tc_c" onchange="liveCalc()">
+        <select id="nr_tc_c" onchange="updatePriceLabels();liveCalc()">
           <option value="oficial">Dólar Oficial BNA</option>
           <option value="mayorista">Dólar Mayorista</option>
           <option value="blue">Dólar Blue / Billete</option>
@@ -534,12 +534,12 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
           <option value="pesos">Pesos Argentinos</option>
         </select>
       </div>
-      <div class="field"><label>🚚 Flete ($/Ton)</label><input type="number" id="nr_flete" placeholder="78" oninput="liveCalc()"></div>
+      <div class="field"><label>🚚 Flete ($/Ton pesos)</label><input type="number" id="nr_flete" placeholder="Ej: 35.000" oninput="liveCalc()"></div>
       <div class="field"><label>⚙️ Servicio / Fasón ($/Ton)</label><input type="number" id="nr_fason" placeholder="160" oninput="liveCalc()"></div>
       <div class="field"><label>🤝 Comisión ($/Ton)</label><input type="number" id="nr_com" value="0" oninput="liveCalc()"></div>
       <div class="field"><label>📋 Gastos Eventuales ($/Ton)</label><input type="number" id="nr_gas" value="0" oninput="liveCalc()"></div>
       <div class="field"><label>💵 Comprador paga en</label>
-        <select id="nr_tc_v" onchange="liveCalc()">
+        <select id="nr_tc_v" onchange="updatePriceLabels();liveCalc()">
           <option value="mayorista">Dólar Mayorista</option>
           <option value="oficial">Dólar Oficial BNA</option>
           <option value="blue">Dólar Blue / Billete</option>
@@ -547,7 +547,7 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
           <option value="pesos">Pesos Argentinos</option>
         </select>
       </div>
-      <div class="field"><label>🏷️ Precio Venta Real ($/Ton)</label><input type="number" id="nr_venta" placeholder="Completar al vender" oninput="liveCalc()"></div>
+      <div class="field"><label id="lbl_venta">🏷️ Precio Venta Real (U$S/Ton)</label><input type="number" id="nr_venta" placeholder="Completar al vender" oninput="liveCalc()"></div>
       <div class="field"><label>👤 Proveedor</label><input type="text" id="nr_prov" placeholder="Nombre proveedor"></div>
       <div class="field"><label>🏢 Cliente / Comprador</label><input type="text" id="nr_cli" placeholder="Nombre cliente"></div>
       <div class="field field-full"><label>📝 Notas</label><textarea id="nr_notas" placeholder="Observaciones, condiciones, aclaraciones..."></textarea></div>
@@ -1060,9 +1060,10 @@ function liveCalc(){
 
   // Desglose
   const tonLabel=r.ton?` × ${r.ton}Ton`:'';
+  const compraDisplay = r.tc_c!=='pesos' && r.compraRaw ? `U$S ${r.compraRaw.toLocaleString('es-AR')} × $${Math.round(getTC(r.tc_c)).toLocaleString('es-AR')} = ${fmt(r.compra)}` : fmt(r.compra);
   document.getElementById('liveDes').innerHTML=`
-    <div class="di"><div class="dl">Precio compra/Ton</div><div class="dv">${fmt(r.compra)}</div></div>
-    <div class="di"><div class="dl">Flete</div><div class="dv">${r.flete?fmt(r.flete):na}</div></div>
+    <div class="di"><div class="dl">Precio compra/Ton</div><div class="dv" style="font-size:.72rem">${compraDisplay}</div></div>
+    <div class="di"><div class="dl">Flete (pesos)</div><div class="dv">${r.flete?fmt(r.flete):na}</div></div>
     <div class="di"><div class="dl">Servicio/Fasón</div><div class="dv">${r.fason?fmt(r.fason):na}</div></div>
     <div class="di"><div class="dl">Comisión</div><div class="dv">${r.com?fmt(r.com):na}</div></div>
     <div class="di"><div class="dl">Gastos eventuales</div><div class="dv">${r.gas?fmt(r.gas):na}</div></div>
@@ -1080,19 +1081,26 @@ function liveCalc(){
   } else if(c.tcC===c.tcV){
     fxH=`<div class="fx-box ok"><p class="note">✓ Misma moneda de compra y venta (${tcLabel(c.tcC)}). Sin impacto de brecha cambiaria.</p></div>`;
   } else {
-    const usd=rC?c.ct/rC:0, ctEV=usd*rV, diff=ctEV-c.ct, esMalo=diff>0;
-    const usdFmt = Math.round(usd).toLocaleString('es-AR');
+    // usd = compra en dólares directo (ya que compra está en pesos = compraRaw * rC)
+    const usd = rC ? c.ct/rC : 0;
+    const usdCompra = r.compraRaw || usd;  // raw dollar value entered
+    const ctEV=usd*rV, diff=ctEV-c.ct, esMalo=diff>0;
+    const usdFmt = Math.round(usdCompra).toLocaleString('es-AR');
+    const ventaUSD = r.ventaRaw || (rV ? (r.venta||0)/rV : 0);
+    const difUSD = ventaUSD - usdCompra;
     fxH=`<div class="fx-box ${esMalo?'warn':'ok'}">
-      <div class="fx-row"><span class="fx-lbl">Proveedor cobra en</span>${tcChip(c.tcC)}<span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">$${Math.round(rC).toLocaleString('es-AR')}/U$S</span></div>
-      <div class="fx-row"><span class="fx-lbl">Comprador paga en</span>${tcChip(c.tcV)}<span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">$${Math.round(rV).toLocaleString('es-AR')}/U$S</span></div>
-      <div class="fx-row"><span class="fx-lbl">Pagás U$S ${usdFmt}/Ton al ${tcLabel(c.tcC)}</span><span class="chip c-b">$${Math.round(usd*rC).toLocaleString('es-AR')}/Ton</span></div>
-      <div class="fx-row"><span class="fx-lbl">Esos U$S ${usdFmt} al TC del comprador valen</span><span class="chip ${esMalo?'c-r':'c-g'}">${fmt(ctEV)}/Ton</span></div>
-      <div class="fx-row"><span class="fx-lbl"><strong>Impacto de la brecha cambiaria</strong></span>
-        <span class="chip ${esMalo?'c-r':'c-g'}">${esMalo?'▼ te resta':'▲ te suma'} ${fmt(Math.abs(diff))}/Ton &nbsp;(${Math.abs(diff/c.ct*100).toFixed(1)}%)</span>
+      <div class="fx-row"><span class="fx-lbl">Comprás a</span>${tcChip(c.tcC)}<span style="font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--text)">U$S ${usdFmt}/Ton</span><span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">TC: $${Math.round(rC).toLocaleString('es-AR')}</span></div>
+      <div class="fx-row"><span class="fx-lbl">Vendés a</span>${tcChip(c.tcV)}<span style="font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--text)">U$S ${Math.round(ventaUSD).toLocaleString('es-AR')}/Ton</span><span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">TC: $${Math.round(rV).toLocaleString('es-AR')}</span></div>
+      <div class="fx-row"><span class="fx-lbl">Diferencia en dólares</span>
+        <span class="chip ${difUSD>=0?'c-g':'c-r'}">${difUSD>=0?'▲':'▼'} U$S ${Math.abs(Math.round(difUSD)).toLocaleString('es-AR')}/Ton</span>
+      </div>
+      <div class="fx-row"><span class="fx-lbl">Costo convertido al TC del comprador</span><span class="chip c-b">${fmt(ctEV)}/Ton</span></div>
+      <div class="fx-row"><span class="fx-lbl"><strong>Impacto brecha cambiaria (TC)</strong></span>
+        <span class="chip ${esMalo?'c-r':'c-g'}">${esMalo?'▼ te resta':'▲ te suma'} ${fmt(Math.abs(diff))}/Ton</span>
       </div>
       <p class="note" style="margin-top:6px">${esMalo
-        ?`⚠ Comprás en ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) y vendés en ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Como el ${tcLabel(c.tcC)} vale más, al cobrar en ${tcLabel(c.tcV)} recuperás menos pesos por cada dólar. Eso te resta <strong style="color:var(--red2)">${fmt(Math.abs(diff))}/Ton</strong> de tu margen.`
-        :`✓ Comprás en ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) y vendés en ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Como el ${tcLabel(c.tcV)} vale más, al cobrar en esa moneda recibís más pesos por cada dólar. La brecha te <strong style="color:var(--green2)">suma ${fmt(Math.abs(diff))}/Ton</strong> extra a tu margen.`
+        ?`⚠ El ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) vale más que el ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Al cobrar en ${tcLabel(c.tcV)} recibís menos pesos por cada dólar, lo que te resta <strong style="color:var(--red2)">${fmt(Math.abs(diff))}/Ton</strong>.`
+        :`✓ El ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S) rinde más que el ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S). Cobrás más pesos por dólar, lo que te suma <strong style="color:var(--green2)">${fmt(Math.abs(diff))}/Ton</strong> extra.`
       }</p>
     </div>`;
   }
@@ -1172,21 +1180,43 @@ function liveCalc(){
   document.getElementById('liveRes').innerHTML=resH;
 }
 
+function updatePriceLabels(){
+  const tcC=document.getElementById('nr_tc_c').value;
+  const tcV=document.getElementById('nr_tc_v').value;
+  const lblC=document.getElementById('lbl_compra');
+  const lblV=document.getElementById('lbl_venta');
+  if(lblC) lblC.textContent = tcC==='pesos' ? '💰 Precio Compra ($/Ton)' : '💰 Precio Compra (U$S/Ton)';
+  if(lblV) lblV.textContent = tcV==='pesos' ? '🏷️ Precio Venta Real ($/Ton)' : '🏷️ Precio Venta Real (U$S/Ton)';
+}
+
 function getForm(){
   const fd=document.getElementById('nr_fecha').value;
+  const tc_c=document.getElementById('nr_tc_c').value;
+  const tc_v=document.getElementById('nr_tc_v').value;
+  const rC=getTC(tc_c)||1;
+  const rV=getTC(tc_v)||1;
+  // compra y venta se ingresan en la moneda del TC seleccionado
+  const compraRaw=parseFloat(document.getElementById('nr_compra').value)||0;
+  const ventaRaw=parseFloat(document.getElementById('nr_venta').value)||null;
+  // convertir a pesos para calcRow
+  const compraPesos = tc_c==='pesos' ? compraRaw : compraRaw * rC;
+  const ventaPesos  = ventaRaw===null ? null : (tc_v==='pesos' ? ventaRaw : ventaRaw * rV);
+  updatePriceLabels();
   return{
     cot:document.getElementById('nr_cot').value.trim(),
     fecha:fd||new Date().toISOString().slice(0,10),
     prod:document.getElementById('nr_prod').value,
     ton:parseFloat(document.getElementById('nr_ton').value)||null,
-    compra:parseFloat(document.getElementById('nr_compra').value)||0,
-    tc_c:document.getElementById('nr_tc_c').value,
+    compra:compraPesos,
+    compraRaw:compraRaw,
+    tc_c,
     flete:parseFloat(document.getElementById('nr_flete').value)||0,
     fason:parseFloat(document.getElementById('nr_fason').value)||0,
     com:parseFloat(document.getElementById('nr_com').value)||0,
     gas:parseFloat(document.getElementById('nr_gas').value)||0,
-    tc_v:document.getElementById('nr_tc_v').value,
-    venta:parseFloat(document.getElementById('nr_venta').value)||null,
+    tc_v,
+    venta:ventaPesos,
+    ventaRaw:ventaRaw,
     prov:document.getElementById('nr_prov').value.trim(),
     cli:document.getElementById('nr_cli').value.trim(),
     notas:document.getElementById('nr_notas').value.trim(),
@@ -1586,6 +1616,7 @@ pKeys.forEach(k=>{
 initApiKeyUI();
 
 render();
+updatePriceLabels();
 refreshAll();
 </script>
 </body>
