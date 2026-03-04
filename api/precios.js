@@ -39,62 +39,151 @@ module.exports = async function handler(req, res) {
     } catch (e) { errors.push('stooq/' + sym + ': ' + e.message); }
   }
 
-  // ── 2. Dolar Divisa BNA via argentinadatos ─────────────
+  // ── 2. Dólar Divisa BNA ────────────────────────────────
+  // Intento A: dolarapi ambito (lista completa Ambito que incluye divisa)
   try {
-    const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares/divisa', {
+    const r = await fetch('https://dolarapi.com/v1/ambito/dolares', {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000)
     });
     if (r.ok) {
       const data = await r.json();
-      const last = Array.isArray(data) ? data[data.length - 1] : data;
-      if (last && last.venta > 0) {
-        out.divisa_sell = last.venta;
-        out.divisa_buy  = last.compra || last.venta;
-      } else { errors.push('argentinadatos divisa: sin datos validos'); }
-    } else { errors.push('argentinadatos divisa HTTP ' + r.status); }
-  } catch (e) { errors.push('argentinadatos divisa: ' + e.message); }
+      const divisa = data.find(function(d) {
+        const c = (d.casa || d.nombre || '').toLowerCase();
+        return c.includes('divis');
+      });
+      if (divisa && divisa.venta > 0) {
+        out.divisa_sell = divisa.venta;
+        out.divisa_buy  = divisa.compra || divisa.venta;
+      } else {
+        errors.push('ambito dolares: casas=' + data.map(function(d){ return d.casa; }).join(','));
+      }
+    } else {
+      errors.push('ambito dolares HTTP ' + r.status);
+    }
+  } catch (e) { errors.push('ambito dolares: ' + e.message); }
 
-  // ── 3. Expeller via expeller.com.ar ────────────────────
+  // Intento B: scraping directo BNA (server-side, sin CORS)
+  if (!out.divisa_sell) {
+    try {
+      const r = await fetch('https://www.bna.com.ar/Personas', {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'es-AR,es;q=0.9',
+          'Cache-Control': 'no-cache',
+        },
+        signal: AbortSignal.timeout(10000)
+      });
+      if (r.ok) {
+        const html = await r.text();
+        // BNA tiene una tabla con filas: Dólar U.S.A. | compra | venta
+        // La divisa aparece como segunda fila de la tabla de cotizaciones
+        // Buscamos todos los pares de números que parecen TC (4 dígitos)
+        const allMatches = html.match(/\b1[.,]\d{3}(?:[.,]\d{2})?\b/g) || [];
+        // Buscar específicamente cerca de "divisa"
+        const idx = html.toLowerCase().indexOf('divisa');
+        if (idx > -1) {
+          const chunk = html.slice(Math.max(0,idx-200), idx + 500);
+          const nums = chunk.match(/\d{3,4}[.,]\d{2}/g);
+          if (nums && nums.length >= 2) {
+            const buy  = parseFloat(nums[0].replace(/\./g,'').replace(',','.'));
+            const sell = parseFloat(nums[1].replace(/\./g,'').replace(',','.'));
+            if (sell > 800 && sell < 9999) {
+              out.divisa_sell = sell;
+              out.divisa_buy  = buy;
+            }
+          }
+        }
+        if (!out.divisa_sell) {
+          // Estrategia: tomar el oficial + 0.5% (divisa es casi igual al oficial en BNA)
+          // Esto es un fallback aproximado
+          errors.push('BNA: divisa no encontrada en HTML, usando aproximacion');
+          if (out.sojaI) { // Solo si tenemos datos
+            // No poner nada mejor que mostrar vacio
+          }
+        }
+      } else {
+        errors.push('BNA HTTP ' + r.status);
+      }
+    } catch (e) { errors.push('BNA: ' + e.message); }
+  }
+
+  // Intento C: bluelytics (tiene divisa como campo separado)
+  if (!out.divisa_sell) {
+    try {
+      const r = await fetch('https://api.bluelytics.com.ar/v2/latest', {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (r.ok) {
+        const d = await r.json();
+        // bluelytics tiene: oficial, blue, oficial_euro, blue_euro
+        // No tiene divisa separada, pero el "oficial" de BNA es la base
+        // La divisa BNA suele ser = oficial BNA venta
+        if (d.oficial && d.oficial.value_sell > 0) {
+          // Usar oficial como proxy de divisa si no hay mejor fuente
+          out.divisa_sell = d.oficial.value_sell;
+          out.divisa_buy  = d.oficial.value_buy;
+          errors.push('divisa: usando oficial BNA como aproximacion');
+        }
+      }
+    } catch (e) { errors.push('bluelytics: ' + e.message); }
+  }
+
+  // ── 3. Expeller — fetch directo, parsing mejorado ──────
   try {
     const r = await fetch('http://www.expeller.com.ar/pizarra.asp', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         'Accept-Language': 'es-AR,es;q=0.9',
       },
       signal: AbortSignal.timeout(12000)
     });
     if (r.ok) {
-      const html = await r.text();
-      const lower = html.toLowerCase();
+      // El sitio devuelve Windows-1252 (latin1), no UTF-8
+      const buf = await r.arrayBuffer();
+      const html = new TextDecoder('windows-1252').decode(buf);
 
-      const findPrice = function(keyword) {
-        // Busca bloque "expeller" que contenga el keyword
-        let idx = lower.indexOf('expeller');
-        while (idx !== -1) {
-          const block = lower.slice(idx, idx + 200);
-          if (block.includes(keyword.toLowerCase())) {
-            const chunk = html.slice(idx, idx + 600);
-            const re = /\b(\d{2,3}[.,]\d{3}|\d{5,7})\b/g;
-            let m;
-            while ((m = re.exec(chunk)) !== null) {
-              const raw = m[1].replace(/\./g, '').replace(',', '');
-              const v = parseInt(raw, 10);
-              if (v >= 30000 && v <= 9999999) return v;
+      // Extraer TODOS los números de 5-7 cifras del HTML
+      const allNums = [];
+      const re = /\b(\d{5,7})\b/g;
+      let m;
+      while ((m = re.exec(html)) !== null) {
+        const v = parseInt(m[1], 10);
+        if (v >= 10000 && v <= 9999999) allNums.push({ val: v, idx: m.index });
+      }
+
+      // Buscar el número más cercano después de "soja"
+      const findNearest = function(keyword) {
+        const lower = html.toLowerCase();
+        let searchFrom = 0;
+        while (true) {
+          const idx = lower.indexOf(keyword, searchFrom);
+          if (idx === -1) break;
+          // Buscar el primer número válido en los siguientes 500 chars
+          for (var i = 0; i < allNums.length; i++) {
+            if (allNums[i].idx >= idx && allNums[i].idx <= idx + 500) {
+              return allNums[i].val;
             }
           }
-          idx = lower.indexOf('expeller', idx + 1);
+          searchFrom = idx + 1;
         }
         return null;
       };
 
-      const expSoja    = findPrice('soja');
-      const expGirasol = findPrice('girasol');
+      const expSoja    = findNearest('soja');
+      const expGirasol = findNearest('girasol');
+
       if (expSoja)    out.expSoja    = expSoja;
       if (expGirasol) out.expGirasol = expGirasol;
-      if (!expSoja && !expGirasol) errors.push('expeller: precios no encontrados');
-    } else { errors.push('expeller HTTP ' + r.status); }
+      if (!expSoja && !expGirasol) {
+        errors.push('expeller: html=' + html.length + 'chars, numeros=' + allNums.length + ', snippet=' + html.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').slice(0,300));
+      }
+    } else {
+      errors.push('expeller HTTP ' + r.status);
+    }
   } catch (e) { errors.push('expeller: ' + e.message); }
 
   // ── 4. Granos Rosario via BCR ──────────────────────────
@@ -113,10 +202,10 @@ module.exports = async function handler(req, res) {
         return (v > 50 && v < 2000) ? v : null;
       };
       const s = extract('Soja');
-      const m = extract('Ma');
+      const m2 = extract('Ma');
       const g = extract('Girasol');
       if (s) out.gS = s;
-      if (m) out.gM = m;
+      if (m2) out.gM = m2;
       if (g) out.gG = g;
     } else { errors.push('BCR HTTP ' + r.status); }
   } catch (e) { errors.push('BCR: ' + e.message); }
