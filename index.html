@@ -14,8 +14,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500;600&family=Nunito:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0d0d0f;--s1:#141417;--s2:#1a1a1f;--s3:#202028;--s4:#26262f;
-  --border:#32323d;--border2:#3a3a47;
+  --bg:#050807;--s1:#0a0f0d;--s2:#111714;--s3:#182018;--s4:#1f2a22;
+  --border:#263029;--border2:#2e3a31;
   --gold:#c8a84b;--gold2:#e8c96a;--gold3:#f5d87a;
   --green:#2eb872;--green2:#47d688;
   --red:#d94f4f;--red2:#f06060;
@@ -25,7 +25,7 @@
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 html{scroll-behavior:smooth;}
-body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;font-size:16px;}
+body{font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
 
 /* BG texture */
 body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
@@ -1081,17 +1081,18 @@ function liveCalc(){
     fxH=`<div class="fx-box ok"><p class="note">✓ Misma moneda de compra y venta (${tcLabel(c.tcC)}). Sin impacto de brecha cambiaria.</p></div>`;
   } else {
     const usd=rC?c.ct/rC:0, ctEV=usd*rV, diff=ctEV-c.ct, esMalo=diff>0;
+    const usdFmt = Math.round(usd).toLocaleString('es-AR');
     fxH=`<div class="fx-box ${esMalo?'warn':'ok'}">
       <div class="fx-row"><span class="fx-lbl">Proveedor cobra en</span>${tcChip(c.tcC)}<span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">$${Math.round(rC).toLocaleString('es-AR')}/U$S</span></div>
       <div class="fx-row"><span class="fx-lbl">Comprador paga en</span>${tcChip(c.tcV)}<span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">$${Math.round(rV).toLocaleString('es-AR')}/U$S</span></div>
-      <div class="fx-row"><span class="fx-lbl">Tu costo en dólares</span><span class="chip c-b">${fmtU(usd)}/Ton</span></div>
-      <div class="fx-row"><span class="fx-lbl">Ese costo al TC del comprador</span><span class="chip ${esMalo?'c-r':'c-g'}">${fmt(ctEV)}/Ton</span></div>
-      <div class="fx-row"><span class="fx-lbl"><strong>Diferencia neta por brecha</strong></span>
-        <span class="chip ${esMalo?'c-r':'c-g'}">${esMalo?'▼':'▲'} ${fmt(Math.abs(diff))}/Ton &nbsp;(${(diff/c.ct*100).toFixed(1)}%)</span>
+      <div class="fx-row"><span class="fx-lbl">Pagás U$S ${usdFmt}/Ton al ${tcLabel(c.tcC)}</span><span class="chip c-b">$${Math.round(usd*rC).toLocaleString('es-AR')}/Ton</span></div>
+      <div class="fx-row"><span class="fx-lbl">Esos U$S ${usdFmt} al TC del comprador valen</span><span class="chip ${esMalo?'c-r':'c-g'}">${fmt(ctEV)}/Ton</span></div>
+      <div class="fx-row"><span class="fx-lbl"><strong>Impacto de la brecha cambiaria</strong></span>
+        <span class="chip ${esMalo?'c-r':'c-g'}">${esMalo?'▼ te resta':'▲ te suma'} ${fmt(Math.abs(diff))}/Ton &nbsp;(${Math.abs(diff/c.ct*100).toFixed(1)}%)</span>
       </div>
       <p class="note" style="margin-top:6px">${esMalo
-        ?`⚠ Pagás al ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) pero cobrás al ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Para recomprar los mismos dólares te faltan <strong style="color:var(--red2)">${fmt(Math.abs(diff))}/Ton</strong>. Sumalo al costo antes de negociar.`
-        :`✓ Comprás al ${tcLabel(c.tcC)} y cobrás al ${tcLabel(c.tcV)}. La brecha te suma <strong style="color:var(--green2)">${fmt(Math.abs(diff))}/Ton</strong> extra.`
+        ?`⚠ Comprás en ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) y vendés en ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Como el ${tcLabel(c.tcC)} vale más, al cobrar en ${tcLabel(c.tcV)} recuperás menos pesos por cada dólar. Eso te resta <strong style="color:var(--red2)">${fmt(Math.abs(diff))}/Ton</strong> de tu margen.`
+        :`✓ Comprás en ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) y vendés en ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Como el ${tcLabel(c.tcV)} vale más, al cobrar en esa moneda recibís más pesos por cada dólar. La brecha te <strong style="color:var(--green2)">suma ${fmt(Math.abs(diff))}/Ton</strong> extra a tu margen.`
       }</p>
     </div>`;
   }
@@ -1131,13 +1132,41 @@ function liveCalc(){
     const pos=c.maAj>=0, col=pos?'var(--green2)':'var(--red2)';
     const bg=pos?'rgba(46,184,114,.06)':'rgba(217,79,79,.07)';
     const bd=pos?'rgba(46,184,114,.22)':'rgba(217,79,79,.22)';
-    resH=`<div class="res-box" style="background:${bg};border:1px solid ${bd};margin-top:10px">
-      <div class="rs"><div class="rl">Venta</div><div class="rv" style="color:var(--text)">${fmt(r.venta)}</div></div>
-      <div class="rs"><div class="rl">Costo base</div><div class="rv vgl">${fmt(c.ct)}</div></div>
-      ${c.bAj>0?`<div class="rs"><div class="rl">Pérdida brecha</div><div class="rv" style="color:var(--orange)">-${fmt(c.bAj)}</div></div>`:''}
-      <div class="rs"><div class="rl">${pos?'✓ Ganás':'✗ Perdés'}/Ton</div><div class="rv" style="color:${col};font-size:1.1rem">${fmt(c.maAj)}</div></div>
-      ${r.ton?`<div class="rs"><div class="rl">Total ${r.ton}Ton</div><div class="rv" style="color:${col};font-size:1.1rem">${fmt(c.maAj*r.ton)}</div></div>`:''}
-      <div class="rs"><div class="rl">Rentabilidad</div><div class="rv" style="color:${col};font-size:1.1rem">${pct(c.mpAj)}</div></div>
+    const tcVval = getTC(c.tcV) || 1;
+    const totalPesos = r.ton ? c.maAj * r.ton : null;
+    const totalUSD = totalPesos ? Math.round(totalPesos / tcVval) : null;
+    const ganXtonUSD = Math.round(c.maAj / tcVval);
+    resH=`<div style="background:${bg};border:1px solid ${bd};border-radius:10px;padding:14px 16px;margin-top:10px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
+        <div style="background:rgba(0,0,0,.2);border-radius:7px;padding:8px 10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Venta (${tcLabel(c.tcV)})</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.9rem">${fmt(r.venta)}/Ton</div>
+        </div>
+        <div style="background:rgba(0,0,0,.2);border-radius:7px;padding:8px 10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Costo total</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--orange)">- ${fmt(c.ctAj)}/Ton</div>
+        </div>
+      </div>
+      <div style="border-top:1px solid ${bd};padding-top:10px">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">${pos?'✓ Resultado positivo':'✗ Resultado negativo'}</div>
+        <div style="display:grid;grid-template-columns:${r.ton?'1fr 1fr 1fr':'1fr 1fr'};gap:8px">
+          <div style="text-align:center">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--muted);margin-bottom:3px">Por tonelada $</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;color:${col}">${fmt(c.maAj)}</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--muted);margin-bottom:3px">Por tonelada U$S</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;color:${col}">U$S ${ganXtonUSD.toLocaleString('es-AR')}</div>
+          </div>
+          ${r.ton?`<div style="text-align:center;background:rgba(0,0,0,.15);border-radius:7px;padding:6px 4px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--muted);margin-bottom:3px">Total ${r.ton} Ton $</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:800;color:${col}">${fmt(totalPesos)}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:${col};margin-top:2px">U$S ${totalUSD.toLocaleString('es-AR')}</div>
+          </div>`:''}
+        </div>
+        ${!r.ton?`<div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted)">💡 Cargá las toneladas para ver el total en $ y U$S</div>`:''}
+        <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:${col}">Rentabilidad: ${pct(c.mpAj)}</div>
+      </div>
     </div>`;
   }
   document.getElementById('liveRes').innerHTML=resH;
@@ -1222,10 +1251,12 @@ function renderTable(){
   let h=`<table class="rtab"><thead><tr>
     <th style="text-align:left">Fecha / N°</th><th style="text-align:left">Producto</th>
     <th>Ton</th><th>TC Compra</th><th>Costo/Ton</th><th>TC Venta</th>
-    <th>Venta Real</th><th style="color:var(--gold2)">Gan./Ton</th><th>%</th><th></th><th></th>
+    <th>Venta Real</th><th style="color:var(--gold2)">Gan. Total $</th><th style="color:var(--blue2)">Gan. Total U$S</th><th>%</th><th></th><th></th>
   </tr></thead><tbody>`;
   rows.forEach((r,i)=>{
     const c=calcRow(r), mc=c.maAj===null?'':(c.maAj>=0?'vg':'vr');
+    const ganTotal=c.maAj!==null&&r.ton?c.maAj*r.ton:null;
+    const ganUSD=ganTotal!==null?(ganTotal/(state.tc[c.tcV]||1)):null;
     h+=`<tr>
       <td><span style="font-size:.65rem;color:var(--muted)">${r.fecha||'—'}</span><br>${r.cot||`Op.${i+1}`}</td>
       <td><span style="font-size:.7rem;color:var(--muted)">${r.prod}</span>${r.cli?`<br><span style="font-size:.6rem;color:var(--dim)">${r.cli}</span>`:''}</td>
@@ -1234,17 +1265,21 @@ function renderTable(){
       <td class="vgl">${fmt(c.ct)}</td>
       <td style="text-align:center">${tcChip(r.tc_v)}</td>
       <td>${r.venta!==null?fmt(r.venta):na}</td>
-      <td class="${mc}">${fmt(c.maAj)}</td>
+      <td class="${mc}">${ganTotal!==null?fmt(ganTotal):(c.maAj!==null?fmt(c.maAj)+'/T':na)}</td>
+      <td class="${mc}" style="font-size:.8rem">${ganUSD!==null?fmtU(Math.round(ganUSD)):na}</td>
       <td class="${mc}">${pct(c.mpAj)}</td>
       <td><button class="btn" style="padding:3px 8px;font-size:.65rem;background:rgba(61,143,224,.1);border:1px solid rgba(61,143,224,.2);color:var(--blue2);" onclick="showDetail(${i})">👁</button></td>
       <td><button class="btn btn-d" onclick="removeRow(${i})">✕</button></td>
     </tr>`;
   });
+  const totGanPesos=rows.reduce((a,r)=>{const c=calcRow(r);return a+(c.maAj&&r.ton?c.maAj*r.ton:0);},0);
+  const totGanUSD=rows.reduce((a,r)=>{const c=calcRow(r);const g=c.maAj&&r.ton?c.maAj*r.ton:0;return a+g/(state.tc[c.tcV]||1);},0);
   h+=`</tbody><tfoot><tr class="frow">
     <td colspan="2">TOTAL (${rows.length} op.)</td>
     <td>—</td><td>—</td>
     <td>${fmt(sT)}</td><td>—</td><td>${fmt(sV)}</td>
-    <td class="${sM>=0?'vg':'vr'}">${fmt(sM)}</td>
+    <td class="${totGanPesos>=0?'vg':'vr'}" style="font-weight:700">${fmt(Math.round(totGanPesos))}</td>
+    <td class="${totGanUSD>=0?'vg':'vr'}" style="font-size:.8rem">${fmtU(Math.round(totGanUSD))}</td>
     <td class="${sM>=0?'vg':'vr'}">${sT>0&&mC?((sM/sT)*100).toFixed(1)+'%':'—'}</td>
     <td></td><td></td>
   </tr></tfoot></table>`;
@@ -1331,12 +1366,14 @@ function renderHist(){
     <th style="text-align:left">Fecha</th><th style="text-align:left">N° / Prod.</th>
     <th>Ton</th><th>Proveedor</th><th>Cliente</th><th>TC Compra</th>
     <th>Costo/Ton</th><th>TC Venta</th><th>Venta</th>
-    <th>Gan./Ton</th><th>%</th><th>Estado</th><th></th>
+    <th>Gan. Total $</th><th style="color:var(--blue2)">Gan. Total U$S</th><th>%</th><th>Estado</th><th></th>
   </tr></thead><tbody>`;
 
   filtered.forEach((r,fi)=>{
     const ri=rows.indexOf(r);
     const c=calcRow(r), mc=c.maAj===null?'':(c.maAj>=0?'vg':'vr');
+    const ganTotal=c.maAj!==null&&r.ton?c.maAj*r.ton:null;
+    const ganUSD=ganTotal!==null?Math.round(ganTotal/(state.tc[c.tcV]||1)):null;
     const tag=r.venta===null?`<span class="tag tag-pend">Pendiente</span>`:(c.maAj>=0?`<span class="tag tag-new">Cerrada ✓</span>`:`<span class="tag" style="background:rgba(217,79,79,.1);color:var(--red2)">Pérdida</span>`);
     h+=`<tr>
       <td class="vm">${r.fecha||'—'}</td>
@@ -1348,7 +1385,8 @@ function renderHist(){
       <td class="vgl">${fmt(c.ct)}</td>
       <td style="text-align:center">${tcChip(r.tc_v)}</td>
       <td>${r.venta!==null?fmt(r.venta):'<span style="opacity:.3">—</span>'}</td>
-      <td class="${mc}">${fmt(c.maAj)}</td>
+      <td class="${mc}">${ganTotal!==null?fmt(Math.round(ganTotal)):(c.maAj!==null?fmt(c.maAj)+'/T':'—')}</td>
+      <td class="${mc}" style="font-size:.8rem">${ganUSD!==null?fmtU(ganUSD):'—'}</td>
       <td class="${mc}">${pct(c.mpAj)}</td>
       <td>${tag}</td>
       <td><button class="btn" style="padding:3px 8px;font-size:.65rem;background:rgba(61,143,224,.1);border:1px solid rgba(61,143,224,.2);color:var(--blue2);" onclick="showDetail(${ri})">👁</button></td>
