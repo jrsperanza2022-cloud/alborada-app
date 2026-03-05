@@ -1645,7 +1645,7 @@ function renderTable(){
       <td class="${mc}" style="font-size:.8rem">${ganUSD!==null?fmtU(Math.round(ganUSD)):na}</td>
       <td class="${mc}">${pct(c.mpAj)}</td>
       <td><button class="btn" style="padding:3px 8px;font-size:.65rem;background:rgba(61,143,224,.1);border:1px solid rgba(61,143,224,.2);color:var(--blue2);" onclick="showDetail(${i})">👁</button></td>
-      <td><button class="btn btn-d" onclick="removeRow(${i})">✕</button></td>
+      <td><button class="btn btn-d" onclick="ciRemoveRow(${i})">✕</button></td>
     </tr>`;
   });
   const totGanPesos=rows.reduce((a,r)=>{const c=calcRow(r);return a+(c.maAj&&r.ton?c.maAj*r.ton:0);},0);
@@ -2131,20 +2131,15 @@ let ciRows = [];
 let ciRowId = 0;
 
 function ciNewRow() {
-  return {
-    id: ciRowId++,
+  ciRows.push({
+    id: ++ciRowId,
     producto:'', despAduana:'', deposito:'', costoDeposito:'',
     arancel:'0', puerto:'', costoPuerto:'', fletePlanta:'',
     fleteInterno:'', flexitanq:'', valorBase:'',
     incoterm:'', posicion:'', tons:''
-  };
+  });
+  ciRender();
 }
-
-// ── INIT ─────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', function() {
-  ciBuildIncotermsHelp();
-  addRow();
-});
 
 function ciBuildIncotermsHelp() {
   const g = document.getElementById('ci_helpGrid');
@@ -2154,7 +2149,7 @@ function ciBuildIncotermsHelp() {
 }
 
 function ciToggleHelp() {
-  document.getElementById('helpBox').classList.toggle('open');
+  const hb=document.getElementById('ci_helpBox')||document.getElementById('helpBox'); if(hb)hb.classList.toggle('open');
 }
 
 // ── CALCULATIONS ─────────────────────────────────────────
@@ -2203,16 +2198,16 @@ function ciRender() {
 
     const breakdown = breakdownItems.length > 0
       ? '<div class="calc-break">' + breakdownItems.map(function(x){
-          return '<span class="calc-break-item">'+x[0]+': '+fmtUSD(x[1])+'</span>';
+          return '<span class="calc-break-item">'+x[0]+': '+ciFmtUSD(x[1])+'</span>';
         }).join('') + '</div>' : '';
 
     const posDesc = pos ? '<div class="sub-calc" title="'+pos.desc+'">'+(pos.desc.length>30?pos.desc.slice(0,30)+'…':pos.desc)+'</div>' : '';
 
     const tonCalc = (c.tons > 0 && c.subtotal > 0)
-      ? '<div class="sub-calc">'+c.tons+' t × '+fmtUSD(c.subtotal)+'</div>' : '';
+      ? '<div class="sub-calc">'+c.tons+' t × '+ciFmtUSD(c.subtotal)+'</div>' : '';
 
     function mkSel(field, opts, placeholder) {
-      let html = '<select onchange="updateRow('+idx+',\''+field+'\',this.value)" style="width:100%">';
+      let html = '<select onchange="ciUpdateRow('+idx+',\''+field+'\',this.value)" style="width:100%">';
       if (placeholder) html += '<option value="">'+placeholder+'</option>';
       opts.forEach(function(o) {
         const val = typeof o === 'object' ? o.value : o;
@@ -2226,7 +2221,7 @@ function ciRender() {
 
     function mkNum(field, ph, w) {
       return '<input type="number" min="0" step="0.01" placeholder="'+(ph||'0.00')+'" value="'+(r[field]||'')+'" '
-        +'style="width:'+(w||88)+'px" oninput="updateRow('+idx+',\''+field+'\',this.value)">';
+        +'style="width:'+(w||88)+'px" oninput="ciUpdateRow('+idx+',\''+field+'\',this.value)">';
     }
 
     const arancelOpts = [];
@@ -2253,28 +2248,28 @@ function ciRender() {
       '<td class="w-ton">'+mkNum('tons','Ton',65)+'</td>'+
       '<td class="w-sub col-sub">'+
         '<div class="calc-val" style="color:'+(c.subtotal>0?'var(--blue2)':'var(--dim)')+'">'+
-          (c.subtotal>0?fmtUSD(c.subtotal):'—')+'</div>'+breakdown+
+          (c.subtotal>0?ciFmtUSD(c.subtotal):'—')+'</div>'+breakdown+
       '</td>'+
       '<td class="w-tot col-tot">'+
         '<div class="calc-val" style="color:'+(c.total>0?'var(--green2)':'var(--dim)')+'">'+
-          (c.total>0?fmtUSD(c.total):'—')+'</div>'+tonCalc+
+          (c.total>0?ciFmtUSD(c.total):'—')+'</div>'+tonCalc+
       '</td>'+
       '<td style="padding:4px">'+
-        '<button class="btn-del" onclick="removeRow('+idx+')" title="Eliminar">x</button>'+
+        '<button class="btn-del" onclick="ciRemoveRow('+idx+')" title="Eliminar">x</button>'+
       '</td>';
     tbody.appendChild(tr);
   });
 
   // TFOOT
-  if (rows.length > 1) {
+  if (ciRows.length > 1) {
     tfoot.innerHTML =
       '<tr>'+
         '<td colspan="14" style="font-family:\'JetBrains Mono\',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">'+
-          'TOTAL GENERAL ('+rows.length+' operaciones)</td>'+
+          'TOTAL GENERAL ('+ciRows.length+' operaciones)</td>'+
         '<td class="col-sub" style="font-family:\'JetBrains Mono\',monospace;font-size:.82rem;text-align:right;color:var(--blue2);font-weight:700">'+
-          (totalSub>0?fmtUSD(totalSub/countRows)+' prom.':'—')+'</td>'+
+          (totalSub>0?ciFmtUSD(totalSub/countRows)+' prom.':'—')+'</td>'+
         '<td class="col-tot" style="font-family:\'JetBrains Mono\',monospace;font-size:.88rem;text-align:right;color:var(--green2);font-weight:700">'+
-          (totalTot>0?fmtUSD(totalTot):'—')+'</td>'+
+          (totalTot>0?ciFmtUSD(totalTot):'—')+'</td>'+
         '<td></td>'+
       '</tr>';
   } else {
@@ -2287,31 +2282,28 @@ function ciRender() {
   document.getElementById('b_tot').textContent = totalTot>0 ? ciFmtUSD(totalTot) : '—';
 }
 
-function updateRow(idx, field, value) {
-  if (rows[idx]) ciRows[idx][field] = value;
+function ciUpdateRow(idx, field, value) {
+  if (ciRows[idx]) ciRows[idx][field] = value;
   ciRender();
 }
 
-function addRow() {
-  ciRows.push(newRow());
-  ciRender();
-}
+
 
 function ciRemoveRow(idx) {
   ciRows.splice(idx, 1);
-  if (rows.length === 0) rows.push(newRow());
-  ciRender();
+  if (ciRows.length === 0) ciNewRow();
+  else ciRender();
 }
 
 function clearAll() {
   if (!confirm('¿Borrar todas las operaciones?')) return;
-  ciRows = [newRow()];
+  ciRows = []; ciNewRow();
   ciRender();
 }
 
 // ── EXPORT CSV ───────────────────────────────────────────
 function ciExportCSV() {
-  if (!rows.length) return;
+  if (!ciRows.length) return;
   const headers = [
     'Producto','Desp. Aduana U$S/T','Depósito Fiscal','Costo Depósito U$S/T',
     'Arancel %','Arancel U$S/T','Puerto','Costo Puerto U$S/T',
@@ -2319,7 +2311,7 @@ function ciExportCSV() {
     'Valor Base U$S/T','Incoterm','Posición Arancelaria','Descripción NCM',
     'Toneladas','Subtotal U$S/T','Total U$S'
   ];
-  const lines = rows.map(function(r) {
+  const lines = ciRows.map(function(r) {
     const c = ciCalcRow(r);
     const pos = POSICIONES.find(function(p){ return p.code === r.posicion; });
     return [
@@ -2340,7 +2332,7 @@ function ciExportCSV() {
 
 function ciInit(){
   // Populate producto select
-  const sel = document.getElementById('ci_ci_producto') || document.getElementById('ci_producto');
+  const sel = document.getElementById('ci_producto');
   if(sel && sel.options.length <= 1){
     PRODUCTS.forEach(p => {
       const o = document.createElement('option');
