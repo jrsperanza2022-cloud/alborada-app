@@ -513,7 +513,9 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 
   <div class="section highlight">
     <div class="sec-hdr"><div class="sec-title">Nueva Operación</div></div>
-    <div class="fg">
+
+    <!-- Datos generales -->
+    <div class="fg" style="margin-bottom:14px">
       <div class="field"><label>N° Cotización</label><input type="text" id="nr_cot" placeholder="ALB-26-XXXX"></div>
       <div class="field"><label>Fecha</label><input type="date" id="nr_fecha"></div>
       <div class="field"><label>Producto</label>
@@ -524,47 +526,94 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
         </select>
       </div>
       <div class="field"><label>Cantidad (Ton)</label><input type="number" id="nr_ton" placeholder="Ej: 20" oninput="liveCalc()"></div>
-      <div class="field"><label id="lbl_compra">💰 Precio Compra (U$S/Ton)</label><input type="number" id="nr_compra" placeholder="Ej: 1000" oninput="liveCalc()"></div>
-      <div class="field"><label>💵 Proveedor cobra en</label>
-        <select id="nr_tc_c" onchange="updatePriceLabels();liveCalc()">
-          <option value="oficial">Dólar Oficial BNA</option>
-          <option value="mayorista">Dólar Mayorista</option>
-          <option value="blue">Dólar Blue / Billete</option>
-          <option value="divisa">Dólar Divisa BNA</option>
-          <option value="pesos">Pesos Argentinos</option>
-        </select>
-      </div>
-      <div class="field"><label>🚚 Flete ($/Ton pesos)</label><input type="number" id="nr_flete" placeholder="Ej: 35.000" oninput="liveCalc()"></div>
-      <div class="field"><label>⚙️ Servicio / Fasón ($/Ton)</label><input type="number" id="nr_fason" placeholder="160" oninput="liveCalc()"></div>
-      <div class="field"><label>🤝 Comisión ($/Ton)</label><input type="number" id="nr_com" value="0" oninput="liveCalc()"></div>
-      <div class="field"><label>📋 Gastos Eventuales ($/Ton)</label><input type="number" id="nr_gas" value="0" oninput="liveCalc()"></div>
-      <div class="field"><label>💵 Comprador paga en</label>
-        <select id="nr_tc_v" onchange="updatePriceLabels();liveCalc()">
-          <option value="mayorista">Dólar Mayorista</option>
-          <option value="oficial">Dólar Oficial BNA</option>
-          <option value="blue">Dólar Blue / Billete</option>
-          <option value="divisa">Dólar Divisa BNA</option>
-          <option value="pesos">Pesos Argentinos</option>
-        </select>
-      </div>
-      <div class="field"><label id="lbl_venta">🏷️ Precio Venta Real (U$S/Ton)</label><input type="number" id="nr_venta" placeholder="Completar al vender" oninput="liveCalc()"></div>
       <div class="field"><label>👤 Proveedor</label><input type="text" id="nr_prov" placeholder="Nombre proveedor"></div>
       <div class="field"><label>🏢 Cliente / Comprador</label><input type="text" id="nr_cli" placeholder="Nombre cliente"></div>
       <div class="field field-full"><label>📝 Notas</label><textarea id="nr_notas" placeholder="Observaciones, condiciones, aclaraciones..."></textarea></div>
     </div>
 
+    <!-- COMPRA -->
+    <div style="background:rgba(217,127,46,.06);border:1px solid rgba(217,127,46,.2);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--orange);margin-bottom:10px">💰 Compra — Precio pagado al proveedor</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end">
+        <div class="field">
+          <label>Precio U$S/Ton</label>
+          <input type="number" id="nr_compra" placeholder="Ej: 1000" oninput="liveCalc()" style="font-size:1rem;font-weight:700">
+        </div>
+        <div class="field">
+          <label>Moneda de compra (pagás en...)</label>
+          <select id="nr_tc_c" onchange="liveCalc()">
+            <option value="blue">Dólar Blue / Billete</option>
+            <option value="mayorista">Dólar Mayorista BCRA</option>
+            <option value="oficial">Dólar Oficial BNA</option>
+            <option value="divisa">Dólar Divisa BNA</option>
+            <option value="pesos">Pesos Argentinos</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ver equivalente en...</label>
+          <select id="eq_tc_c" onchange="liveCalc()" style="border-color:rgba(200,168,75,.3)">
+            <option value="pesos">Pesos Argentinos</option>
+            <option value="mayorista">Dólar Mayorista BCRA</option>
+            <option value="oficial">Dólar Oficial BNA</option>
+            <option value="divisa">Dólar Divisa BNA</option>
+            <option value="blue">Dólar Blue / Billete</option>
+          </select>
+        </div>
+      </div>
+      <div id="conv_compra" style="margin-top:10px"></div>
+    </div>
+
+    <!-- COSTOS -->
+    <div style="background:rgba(61,143,224,.05);border:1px solid rgba(61,143,224,.15);border-radius:10px;padding:14px;margin-bottom:10px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--blue2);margin-bottom:10px">📦 Costos adicionales (U$S/Ton)</div>
+      <div class="fg">
+        <div class="field"><label>🚚 Flete</label><input type="number" id="nr_flete" placeholder="0" oninput="liveCalc()"></div>
+        <div class="field"><label>⚙️ Servicio / Fasón</label><input type="number" id="nr_fason" placeholder="0" oninput="liveCalc()"></div>
+        <div class="field"><label>🤝 Comisión</label><input type="number" id="nr_com" value="0" oninput="liveCalc()"></div>
+        <div class="field"><label>📋 Gastos Eventuales</label><input type="number" id="nr_gas" value="0" oninput="liveCalc()"></div>
+      </div>
+      <div id="conv_costos" style="margin-top:8px"></div>
+    </div>
+
+    <!-- VENTA -->
+    <div style="background:rgba(46,184,114,.05);border:1px solid rgba(46,184,114,.18);border-radius:10px;padding:14px;margin-bottom:14px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;color:var(--green2);margin-bottom:10px">🏷️ Venta — Precio cobrado al comprador</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:end">
+        <div class="field">
+          <label>Precio U$S/Ton</label>
+          <input type="number" id="nr_venta" placeholder="Completar al vender" oninput="liveCalc()" style="font-size:1rem;font-weight:700">
+        </div>
+        <div class="field">
+          <label>Moneda de venta (cobrás en...)</label>
+          <select id="nr_tc_v" onchange="liveCalc()">
+            <option value="mayorista">Dólar Mayorista BCRA</option>
+            <option value="blue">Dólar Blue / Billete</option>
+            <option value="oficial">Dólar Oficial BNA</option>
+            <option value="divisa">Dólar Divisa BNA</option>
+            <option value="pesos">Pesos Argentinos</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ver equivalente en...</label>
+          <select id="eq_tc_v" onchange="liveCalc()" style="border-color:rgba(200,168,75,.3)">
+            <option value="pesos">Pesos Argentinos</option>
+            <option value="mayorista">Dólar Mayorista BCRA</option>
+            <option value="oficial">Dólar Oficial BNA</option>
+            <option value="divisa">Dólar Divisa BNA</option>
+            <option value="blue">Dólar Blue / Billete</option>
+          </select>
+        </div>
+      </div>
+      <div id="conv_venta" style="margin-top:10px"></div>
+    </div>
+
+    <!-- RESULTADO VIVO -->
     <div id="liveBox" style="display:none">
-      <div class="sep"></div>
-      <div class="sec-title" style="margin-bottom:8px">Desglose de Costos — Vista en vivo</div>
-      <div class="des-grid" id="liveDes"></div>
-      <div class="sep"></div>
-      <div class="sec-title" style="margin-bottom:8px">Análisis de Brecha Cambiaria</div>
-      <div id="liveFX"></div>
+      <div id="liveRes"></div>
       <div class="sep"></div>
       <div class="sec-title" style="margin-bottom:8px">Precios Sugeridos de Venta</div>
       <div class="sugs" id="liveSugs"></div>
       <div id="semaforo" style="margin-top:8px"></div>
-      <div id="liveRes"></div>
     </div>
 
     <div style="margin-top:12px;display:flex;gap:7px;flex-wrap:wrap;">
@@ -823,19 +872,20 @@ function calcRow(r){
 //  FETCH TC — múltiples fuentes con fallback automático
 // ══════════════════════════════════════════════════════════
 async function fetchFromDolarapi(url){
-  // Intentar directo primero (dolarapi tiene CORS abierto)
   const proxies = [
-    u => u,  // directo
+    u => u,  // directo — dolarapi tiene CORS abierto
     u => 'https://corsproxy.io/?'+encodeURIComponent(u),
     u => 'https://api.allorigins.win/get?url='+encodeURIComponent(u),
+    u => 'https://thingproxy.freeboard.io/fetch/'+u,
     u => 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u),
+    u => 'https://corsproxy.org/?'+encodeURIComponent(u),
+    u => 'https://yacdn.org/proxy/'+u,
   ];
   for(const makeUrl of proxies){
     try{
-      const res=await fetch(makeUrl(url),{signal:AbortSignal.timeout(7000)});
+      const res=await fetch(makeUrl(url),{signal:AbortSignal.timeout(8000)});
       if(!res.ok) continue;
       const text=await res.text();
-      // allorigins/codetabs wraps in {contents:...}
       let data;
       try{ const w=JSON.parse(text); data=w.contents?JSON.parse(w.contents):w; }
       catch(e){ data=JSON.parse(text); }
@@ -846,45 +896,63 @@ async function fetchFromDolarapi(url){
   throw new Error('Todos los proxies fallaron');
 }
 
+function applyTCData(data){
+  // Acepta tanto el formato dolarapi (array) como bluelytics (objeto)
+  const ts=new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  if(Array.isArray(data)){
+    data.forEach(d=>{
+      const c=(d.casa||'').toLowerCase();
+      const vta=parseFloat(d.venta)||0, cmp=parseFloat(d.compra)||0;
+      const t=d.fechaActualizacion?new Date(d.fechaActualizacion).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):ts;
+      if(c==='oficial'){apiD.oficial=vta;apiD.oficial_c=cmp;setTCCard('of',cmp,vta,t);}
+      else if(c==='mayorista'){apiD.mayorista=vta;apiD.mayorista_c=cmp;setTCCard('may',cmp,vta,t);}
+      else if(c==='blue'){apiD.blue=vta;apiD.blue_c=cmp;setTCCard('bl',cmp,vta,t);}
+      else if(c==='bolsa'||c==='mep'){apiD.mep=vta;setTCSingle('mep',vta,t);}
+      else if(c==='contadoconliqui'||c==='ccl'){apiD.ccl=vta;setTCSingle('ccl',vta,t);}
+      else if(c==='divisa'||c==='divisas'){apiD.divisa=vta;apiD.divisa_c=cmp;setTCCard('div',cmp,vta,t);}
+    });
+  } else {
+    // bluelytics format
+    if(data.oficial){apiD.oficial=data.oficial.value_sell;apiD.oficial_c=data.oficial.value_buy;setTCCard('of',data.oficial.value_buy,data.oficial.value_sell,ts);}
+    if(data.blue){apiD.blue=data.blue.value_sell;apiD.blue_c=data.blue.value_buy;setTCCard('bl',data.blue.value_buy,data.blue.value_sell,ts);}
+  }
+  updateBrechas(); liveCalc(); calcFX(); calcSim();
+}
+
 async function fetchTC(){
   const dot=document.getElementById('dotTC'), st=document.getElementById('stTC');
   dot.className='dot dload'; st.textContent='TC...';
+  
+  // Fuente 1: /api/tc (Vercel serverless — sin CORS)
   try{
-    // Fuente 1: dolarapi.com (lista completa)
-    let data;
-    try{
-      data=await fetchFromDolarapi('https://dolarapi.com/v1/dolares');
-    }catch(e){
-      // Fuente 2: bluelytics.com.ar (fallback)
-      const bl=await fetchFromDolarapi('https://api.bluelytics.com.ar/v2/latest');
-      const ts=new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-      if(bl.oficial){
-        apiD.oficial=bl.oficial.value_sell;apiD.oficial_c=bl.oficial.value_buy;
-        setTCCard('of',bl.oficial.value_buy,bl.oficial.value_sell,ts);
+    const res=await fetch('/api/tc',{signal:AbortSignal.timeout(8000)});
+    if(res.ok){
+      const data=await res.json();
+      if(data && (Array.isArray(data)?data.length>0:true)){
+        applyTCData(data);
+        dot.className='dot dok'; st.textContent='TC ✓ '+new Date().toLocaleTimeString('es-AR');
+        return;
       }
-      if(bl.blue){
-        apiD.blue=bl.blue.value_sell;apiD.blue_c=bl.blue.value_buy;
-        setTCCard('bl',bl.blue.value_buy,bl.blue.value_sell,ts);
-      }
-      updateBrechas(); liveCalc(); calcFX(); calcSim();
-      dot.className='dot dok'; st.textContent='TC ✓ '+new Date().toLocaleTimeString('es-AR');
-      return;
     }
-    data.forEach(d=>{
-      const c=d.casa, vta=parseFloat(d.venta)||0, cmp=parseFloat(d.compra)||0;
-      const ts=d.fechaActualizacion?new Date(d.fechaActualizacion).toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
-      if(c==='oficial'){apiD.oficial=vta;apiD.oficial_c=cmp;setTCCard('of',cmp,vta,ts);}
-      else if(c==='mayorista'){apiD.mayorista=vta;apiD.mayorista_c=cmp;setTCCard('may',cmp,vta,ts);}
-      else if(c==='blue'){apiD.blue=vta;apiD.blue_c=cmp;setTCCard('bl',cmp,vta,ts);}
-      else if(c==='bolsa'||c==='mep'){apiD.mep=vta;setTCSingle('mep',vta,ts);}
-      else if(c==='contadoconliqui'||c==='ccl'){apiD.ccl=vta;setTCSingle('ccl',vta,ts);}
-      else if(c==='divisa'||c==='divisas'){apiD.divisa=vta;apiD.divisa_c=cmp;setTCCard('div',cmp,vta,ts);}
-    });
-    updateBrechas(); liveCalc(); calcFX(); calcSim();
+  }catch(e){}
+
+  // Fuente 2: dolarapi.com directo + proxies CORS
+  try{
+    const data=await fetchFromDolarapi('https://dolarapi.com/v1/dolares');
+    applyTCData(data);
     dot.className='dot dok'; st.textContent='TC ✓ '+new Date().toLocaleTimeString('es-AR');
-  }catch(e){
-    dot.className='dot derr'; st.textContent='TC error: '+e.message.slice(0,30);
-  }
+    return;
+  }catch(e){}
+
+  // Fuente 3: bluelytics (solo oficial y blue pero más estable)
+  try{
+    const bl=await fetchFromDolarapi('https://api.bluelytics.com.ar/v2/latest');
+    applyTCData(bl);
+    dot.className='dot dok'; st.textContent='TC ✓ (parcial) '+new Date().toLocaleTimeString('es-AR');
+    return;
+  }catch(e){}
+
+  dot.className='dot derr'; st.textContent='TC sin cotiz. · Override manual';
 }
 
 function setTCCard(k,buy,sell,ts){
@@ -1053,60 +1121,91 @@ async function refreshAll(){
 function liveCalc(){
   const r=getForm();
   const box=document.getElementById('liveBox');
-  if(!r.compra){box.style.display='none';return;}
-  box.style.display='';
-  const c=calcRow(r);
-  const na='<span style="opacity:.3">—</span>';
 
-  // Desglose
-  const tonLabel=r.ton?` × ${r.ton}Ton`:'';
-  const compraDisplay = r.tc_c!=='pesos' && r.compraRaw ? `U$S ${r.compraRaw.toLocaleString('es-AR')} × $${Math.round(getTC(r.tc_c)).toLocaleString('es-AR')} = ${fmt(r.compra)}` : fmt(r.compra);
-  document.getElementById('liveDes').innerHTML=`
-    <div class="di"><div class="dl">Precio compra/Ton</div><div class="dv" style="font-size:.72rem">${compraDisplay}</div></div>
-    <div class="di"><div class="dl">Flete (pesos)</div><div class="dv">${r.flete?fmt(r.flete):na}</div></div>
-    <div class="di"><div class="dl">Servicio/Fasón</div><div class="dv">${r.fason?fmt(r.fason):na}</div></div>
-    <div class="di"><div class="dl">Comisión</div><div class="dv">${r.com?fmt(r.com):na}</div></div>
-    <div class="di"><div class="dl">Gastos eventuales</div><div class="dv">${r.gas?fmt(r.gas):na}</div></div>
-    <div class="di dg"><div class="dl">⚑ COSTO TOTAL/Ton</div><div class="dv">${fmt(c.ct)}</div></div>
-    ${r.ton?`<div class="di dg"><div class="dl">Costo total${tonLabel}</div><div class="dv">${fmt(c.ctTot)}</div></div>`:''}
-    ${c.bAj>0?`<div class="di do"><div class="dl">⚠ Pérdida brecha TC</div><div class="dv">-${fmt(c.bAj)}</div></div>`:''}
-    ${c.bAj>0?`<div class="di dr"><div class="dl">Costo ajustado/Ton</div><div class="dv">${fmt(c.ctAj)}</div></div>`:''}
-  `;
+  // -- CONVERTIDOR INLINE helper --
+  function convBox(usdVal, tcOrigen, tcDestino, accentColor){
+    const tcOVal = getTC(tcOrigen)||1;
+    const tcDVal = getTC(tcDestino)||1;
+    const pesos  = usdVal * tcOVal;          // valor en pesos según TC origen
+    const noAvail = !getTC(tcDestino) && tcDestino!=='pesos';
 
-  // FX analysis
-  const rC=getTC(c.tcC), rV=getTC(c.tcV);
-  let fxH='';
-  if(!rC&&c.tcC!=='pesos'){
-    fxH=`<div class="fx-box info"><p class="note">ℹ️ No hay cotización para "${tcLabel(c.tcC)}". Ingresá el valor en la pestaña Mercado → Override manual.</p></div>`;
-  } else if(c.tcC===c.tcV){
-    fxH=`<div class="fx-box ok"><p class="note">✓ Misma moneda de compra y venta (${tcLabel(c.tcC)}). Sin impacto de brecha cambiaria.</p></div>`;
-  } else {
-    // usd = compra en dólares directo (ya que compra está en pesos = compraRaw * rC)
-    const usd = rC ? c.ct/rC : 0;
-    const usdCompra = r.compraRaw || usd;  // raw dollar value entered
-    const ctEV=usd*rV, diff=ctEV-c.ct, esMalo=diff>0;
-    const usdFmt = Math.round(usdCompra).toLocaleString('es-AR');
-    const ventaUSD = r.ventaRaw || (rV ? (r.venta||0)/rV : 0);
-    const difUSD = ventaUSD - usdCompra;
-    fxH=`<div class="fx-box ${esMalo?'warn':'ok'}">
-      <div class="fx-row"><span class="fx-lbl">Comprás a</span>${tcChip(c.tcC)}<span style="font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--text)">U$S ${usdFmt}/Ton</span><span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">TC: $${Math.round(rC).toLocaleString('es-AR')}</span></div>
-      <div class="fx-row"><span class="fx-lbl">Vendés a</span>${tcChip(c.tcV)}<span style="font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:600;color:var(--text)">U$S ${Math.round(ventaUSD).toLocaleString('es-AR')}/Ton</span><span style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted)">TC: $${Math.round(rV).toLocaleString('es-AR')}</span></div>
-      <div class="fx-row"><span class="fx-lbl">Diferencia en dólares</span>
-        <span class="chip ${difUSD>=0?'c-g':'c-r'}">${difUSD>=0?'▲':'▼'} U$S ${Math.abs(Math.round(difUSD)).toLocaleString('es-AR')}/Ton</span>
+    // Cuánto representan esos pesos en el TC destino
+    let eqVal, eqLabel, eqSub;
+    if(tcDestino === 'pesos'){
+      eqVal   = `$ ${Math.round(pesos).toLocaleString('es-AR')}`;
+      eqLabel = 'en Pesos Argentinos';
+      eqSub   = `TC ${tcLabel(tcOrigen)}: $${Math.round(tcOVal).toLocaleString('es-AR')}/U$S`;
+    } else if(noAvail){
+      eqVal   = '—';
+      eqLabel = `en ${tcLabel(tcDestino)}`;
+      eqSub   = 'Sin cotización · override en Mercado';
+    } else {
+      const usdEq = pesos / tcDVal;
+      eqVal   = `U$S ${Math.round(usdEq).toLocaleString('es-AR')}`;
+      eqLabel = `en ${tcLabel(tcDestino)}`;
+      eqSub   = `TC ${tcLabel(tcDestino)}: $${Math.round(tcDVal).toLocaleString('es-AR')}/U$S`;
+    }
+
+    return `<div style="display:flex;align-items:center;gap:12px;background:var(--s1);border:1px solid var(--border2);border-radius:9px;padding:10px 14px;flex-wrap:wrap">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);margin-bottom:2px">Pagás ${tcLabel(tcOrigen)}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;font-weight:800;color:var(--text)">U$S ${usdVal.toLocaleString('es-AR')}/Ton</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--orange)">= $ ${Math.round(pesos).toLocaleString('es-AR')}/Ton</div>
       </div>
-      <div class="fx-row"><span class="fx-lbl">Costo convertido al TC del comprador</span><span class="chip c-b">${fmt(ctEV)}/Ton</span></div>
-      <div class="fx-row"><span class="fx-lbl"><strong>Impacto brecha cambiaria (TC)</strong></span>
-        <span class="chip ${esMalo?'c-r':'c-g'}">${esMalo?'▼ te resta':'▲ te suma'} ${fmt(Math.abs(diff))}/Ton</span>
+      <div style="font-size:1.2rem;color:var(--muted)">→</div>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;color:var(--muted);margin-bottom:2px">${eqLabel}</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:1.3rem;font-weight:800;color:${accentColor}">${eqVal}/Ton</div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--muted)">${eqSub}</div>
       </div>
-      <p class="note" style="margin-top:6px">${esMalo
-        ?`⚠ El ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S) vale más que el ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S). Al cobrar en ${tcLabel(c.tcV)} recibís menos pesos por cada dólar, lo que te resta <strong style="color:var(--red2)">${fmt(Math.abs(diff))}/Ton</strong>.`
-        :`✓ El ${tcLabel(c.tcV)} ($${Math.round(rV).toLocaleString('es-AR')}/U$S) rinde más que el ${tcLabel(c.tcC)} ($${Math.round(rC).toLocaleString('es-AR')}/U$S). Cobrás más pesos por dólar, lo que te suma <strong style="color:var(--green2)">${fmt(Math.abs(diff))}/Ton</strong> extra.`
-      }</p>
     </div>`;
   }
-  document.getElementById('liveFX').innerHTML=fxH;
 
-  // Sugerencias
+  // -- CONVERTIDOR COMPRA --
+  const compraRaw = r.compraRaw || 0;
+  const eqTcC = (document.getElementById('eq_tc_c')||{value:'pesos'}).value;
+  const cc = document.getElementById('conv_compra');
+  if(cc){
+    if(compraRaw > 0){
+      cc.innerHTML = convBox(compraRaw, r.tc_c, eqTcC, 'var(--gold2)');
+    } else {
+      cc.innerHTML = '<div style="font-family:monospace;font-size:.65rem;color:var(--muted);padding:4px 0">Ingresá el precio de compra para ver la equivalencia</div>';
+    }
+  }
+
+  // -- CONVERTIDOR COSTOS --
+  const rCV = getTC(r.tc_v)||getTC(r.tc_c)||1;
+  const totalCostosUSD = r.fleteRaw + r.fasonRaw + r.comRaw + r.gasRaw;
+  const cc2 = document.getElementById('conv_costos');
+  if(cc2 && totalCostosUSD > 0){
+    cc2.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted)">
+      ${r.fleteRaw ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:3px 9px">Flete U$S ${r.fleteRaw} = <span style="color:var(--blue2)">$ ${Math.round(r.flete).toLocaleString('es-AR')}</span></span>` : ''}
+      ${r.fasonRaw ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:3px 9px">Fasón U$S ${r.fasonRaw} = <span style="color:var(--blue2)">$ ${Math.round(r.fason).toLocaleString('es-AR')}</span></span>` : ''}
+      ${r.comRaw   ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:3px 9px">Comisión U$S ${r.comRaw} = <span style="color:var(--blue2)">$ ${Math.round(r.com).toLocaleString('es-AR')}</span></span>` : ''}
+      ${r.gasRaw   ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:3px 9px">Gastos U$S ${r.gasRaw} = <span style="color:var(--blue2)">$ ${Math.round(r.gas).toLocaleString('es-AR')}</span></span>` : ''}
+      <span style="background:rgba(61,143,224,.1);border:1px solid rgba(61,143,224,.2);border-radius:5px;padding:3px 9px;color:var(--blue2);font-weight:700">Total U$S ${totalCostosUSD.toLocaleString('es-AR')} = $ ${Math.round(totalCostosUSD*rCV).toLocaleString('es-AR')}</span>
+    </div>`;
+  } else if(cc2){
+    cc2.innerHTML = '';
+  }
+
+  // -- CONVERTIDOR VENTA --
+  const ventaRaw = r.ventaRaw || 0;
+  const eqTcV = (document.getElementById('eq_tc_v')||{value:'pesos'}).value;
+  const cv = document.getElementById('conv_venta');
+  if(cv){
+    if(ventaRaw > 0){
+      cv.innerHTML = convBox(ventaRaw, r.tc_v, eqTcV, 'var(--green2)');
+    } else {
+      cv.innerHTML = '<div style="font-family:monospace;font-size:.65rem;color:var(--muted);padding:4px 0">Ingresá el precio de venta para ver la equivalencia</div>';
+    }
+  }
+
+  if(!r.compra){box.style.display='none'; return;}
+  box.style.display='';
+  const c=calcRow(r);
+
+  // -- PRECIOS SUGERIDOS --
   document.getElementById('liveSugs').innerHTML=`
     <div class="sp ${c.bAj>0?'sp-warn':'sp-ok'}">
       <div class="spl">Punto de equilibrio</div>
@@ -1119,11 +1218,11 @@ function liveCalc(){
     <div class="sp"><div class="spl">Precio para +15%</div><div class="spv">${fmt(c.s15)}</div><div class="spvs">excelente</div></div>
   `;
 
-  // Semáforo
+  // -- SEMAFORO --
   let semHtml='';
   if(r.venta!==null&&c.mpAj!==null){
     const mp=c.mpAj;
-    const color=mp<3?'red':mp<7.5?'yellow':'green';
+    const color=mp<0?'red':mp<3?'red':mp<7.5?'yellow':'green';
     const lbl=mp<0?'Pérdida':mp<3?'Margen crítico':mp<7.5?'Margen bajo':mp<12?'Margen objetivo':'Margen excelente';
     semHtml=`<div class="semaforo">
       <div class="sem-dot sem-red ${color==='red'?'active':''}"></div>
@@ -1134,51 +1233,84 @@ function liveCalc(){
   }
   document.getElementById('semaforo').innerHTML=semHtml;
 
-  // Resultado
+  // -- RESULTADO COMPARATIVO --
   let resH='';
   if(r.venta!==null){
     const pos=c.maAj>=0, col=pos?'var(--green2)':'var(--red2)';
-    const bg=pos?'rgba(46,184,114,.06)':'rgba(217,79,79,.07)';
-    const bd=pos?'rgba(46,184,114,.22)':'rgba(217,79,79,.22)';
-    const tcVval = getTC(c.tcV) || 1;
-    const totalPesos = r.ton ? c.maAj * r.ton : null;
-    const totalUSD = totalPesos ? Math.round(totalPesos / tcVval) : null;
-    const ganXtonUSD = Math.round(c.maAj / tcVval);
-    resH=`<div style="background:${bg};border:1px solid ${bd};border-radius:10px;padding:14px 16px;margin-top:10px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px">
-        <div style="background:rgba(0,0,0,.2);border-radius:7px;padding:8px 10px">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Venta (${tcLabel(c.tcV)})</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:.9rem">${fmt(r.venta)}/Ton</div>
+    const bg=pos?'rgba(46,184,114,.05)':'rgba(217,79,79,.06)';
+    const bd=pos?'rgba(46,184,114,.3)':'rgba(217,79,79,.3)';
+    const tcVval = getTC(c.tcV)||getTC(c.tcC)||1;
+    const ganPesosTon = c.maAj;
+    const ganUSDTon   = Math.round(ganPesosTon / tcVval);
+    const totalPesos  = r.ton ? Math.round(c.maAj * r.ton) : null;
+    const totalUSD    = r.ton ? Math.round(c.maAj * r.ton / tcVval) : null;
+    const compraUSD   = r.compraRaw || 0;
+    const ventaUSD    = r.ventaRaw  || 0;
+    const totalCostsUSD = r.fleteRaw + r.fasonRaw + r.comRaw + r.gasRaw; const totalCostosUSD = totalCostsUSD;
+    const costoTotalUSD = compraUSD + totalCostsUSD;
+    const icon = pos ? '▲' : '▼';
+    const tcCval = getTC(c.tcC)||1;
+
+    resH=`<div style="background:${bg};border:2px solid ${bd};border-radius:12px;padding:16px;margin-bottom:14px">
+
+      <!-- TÍTULO -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid ${bd}">
+        <div style="width:12px;height:12px;border-radius:50%;background:${col};box-shadow:0 0 10px ${col};flex-shrink:0"></div>
+        <span style="font-family:'Syne',sans-serif;font-size:1.05rem;font-weight:800;color:${col}">${pos?'GANANCIA':'PÉRDIDA'}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted);margin-left:4px">${tcLabel(c.tcC)} → ${tcLabel(c.tcV)}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:.8rem;font-weight:700;color:${col};margin-left:auto">${pct(c.mpAj)}</span>
+      </div>
+
+      <!-- COMPARATIVO: COMPRA vs VENTA vs COSTOS -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px">
+
+        <div style="background:rgba(217,127,46,.08);border:1px solid rgba(217,127,46,.25);border-radius:9px;padding:10px 12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--orange);margin-bottom:6px">Comprás en ${tcLabel(c.tcC)}</div>
+          <div style="margin-bottom:6px">${tcChip(c.tcC)}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:800;color:var(--text)">U$S ${compraUSD.toLocaleString('es-AR')}/T</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--orange);margin-top:3px">= $ ${Math.round(r.compra).toLocaleString('es-AR')}/T</div>
+          ${totalCostsUSD>0?`<div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--blue2);margin-top:6px;padding-top:6px;border-top:1px solid rgba(61,143,224,.15)">+ costos U$S ${totalCostsUSD}/T<br>= $ ${Math.round(totalCostosUSD*tcVval).toLocaleString('es-AR')}/T</div>`:''}
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;font-weight:700;color:var(--orange);margin-top:6px;padding-top:6px;border-top:1px solid rgba(217,127,46,.2)">Costo total: U$S ${costoTotalUSD}/T</div>
         </div>
-        <div style="background:rgba(0,0,0,.2);border-radius:7px;padding:8px 10px">
-          <div style="font-family:'JetBrains Mono',monospace;font-size:.55rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:3px">Costo total</div>
-          <div style="font-family:'JetBrains Mono',monospace;font-size:.9rem;color:var(--orange)">- ${fmt(c.ctAj)}/Ton</div>
+
+        <div style="background:rgba(46,184,114,.07);border:1px solid rgba(46,184,114,.25);border-radius:9px;padding:10px 12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:var(--green2);margin-bottom:6px">Vendés en ${tcLabel(c.tcV)}</div>
+          <div style="margin-bottom:6px">${tcChip(c.tcV)}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:800;color:var(--text)">U$S ${ventaUSD.toLocaleString('es-AR')}/T</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--green2);margin-top:3px">= $ ${Math.round(r.venta).toLocaleString('es-AR')}/T</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.65rem;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid rgba(46,184,114,.15)">TC $${Math.round(tcVval).toLocaleString('es-AR')}/U$S</div>
+        </div>
+
+        <div style="background:${bg};border:2px solid ${bd};border-radius:9px;padding:10px 12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.1em;text-transform:uppercase;color:${col};margin-bottom:6px">Resultado neto/Ton</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:800;color:${col}">${icon} U$S ${Math.abs(ganUSDTon).toLocaleString('es-AR')}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1rem;font-weight:700;color:${col};margin-top:4px">${icon} $ ${Math.abs(Math.round(ganPesosTon)).toLocaleString('es-AR')}</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.62rem;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid ${bd}">${pct(c.mpAj)} rentabilidad</div>
         </div>
       </div>
-      <div style="border-top:1px solid ${bd};padding-top:10px">
-        <div style="font-family:'JetBrains Mono',monospace;font-size:.6rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">${pos?'✓ Resultado positivo':'✗ Resultado negativo'}</div>
-        <div style="display:grid;grid-template-columns:${r.ton?'1fr 1fr 1fr':'1fr 1fr'};gap:8px">
-          <div style="text-align:center">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--muted);margin-bottom:3px">Por tonelada $</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;color:${col}">${fmt(c.maAj)}</div>
-          </div>
-          <div style="text-align:center">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--muted);margin-bottom:3px">Por tonelada U$S</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:1.05rem;font-weight:700;color:${col}">U$S ${ganXtonUSD.toLocaleString('es-AR')}</div>
-          </div>
-          ${r.ton?`<div style="text-align:center;background:rgba(0,0,0,.15);border-radius:7px;padding:6px 4px">
-            <div style="font-family:'JetBrains Mono',monospace;font-size:.56rem;color:var(--muted);margin-bottom:3px">Total ${r.ton} Ton $</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:1.15rem;font-weight:800;color:${col}">${fmt(totalPesos)}</div>
-            <div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:${col};margin-top:2px">U$S ${totalUSD.toLocaleString('es-AR')}</div>
-          </div>`:''}
+
+      <!-- TOTAL SI HAY TONELADAS -->
+      ${r.ton ? `
+      <div style="background:rgba(0,0,0,.25);border:1px solid ${bd};border-radius:9px;padding:12px 14px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);text-transform:uppercase;margin-bottom:4px">${r.ton} Toneladas · Total $</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:800;color:${col}">${icon} $ ${Math.abs(totalPesos).toLocaleString('es-AR')}</div>
         </div>
-        ${!r.ton?`<div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.68rem;color:var(--muted)">💡 Cargá las toneladas para ver el total en $ y U$S</div>`:''}
-        <div style="margin-top:8px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:${col}">Rentabilidad: ${pct(c.mpAj)}</div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);text-transform:uppercase;margin-bottom:4px">${r.ton} Toneladas · Total U$S</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:800;color:${col}">${icon} U$S ${Math.abs(totalUSD).toLocaleString('es-AR')}</div>
+        </div>
+        <div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Rentabilidad</div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:1.25rem;font-weight:800;color:${col}">${pct(c.mpAj)}</div>
+        </div>
       </div>
+      ` : `<div style="text-align:center;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);padding:8px">💡 Ingresá las toneladas para ver el resultado total acumulado</div>`}
     </div>`;
   }
   document.getElementById('liveRes').innerHTML=resH;
 }
+
 
 function updatePriceLabels(){
   const tcC=document.getElementById('nr_tc_c').value;
@@ -1198,9 +1330,18 @@ function getForm(){
   // compra y venta se ingresan en la moneda del TC seleccionado
   const compraRaw=parseFloat(document.getElementById('nr_compra').value)||0;
   const ventaRaw=parseFloat(document.getElementById('nr_venta').value)||null;
-  // convertir a pesos para calcRow
+  const fleteRaw=parseFloat(document.getElementById('nr_flete').value)||0;
+  const fasonRaw=parseFloat(document.getElementById('nr_fason').value)||0;
+  const comRaw=parseFloat(document.getElementById('nr_com').value)||0;
+  const gasRaw=parseFloat(document.getElementById('nr_gas').value)||0;
+  // Todos los valores en U$S → convertir a pesos usando TC del comprador (rV)
+  const tcConv = rV || rC || 1;
   const compraPesos = tc_c==='pesos' ? compraRaw : compraRaw * rC;
   const ventaPesos  = ventaRaw===null ? null : (tc_v==='pesos' ? ventaRaw : ventaRaw * rV);
+  const fletePesos  = fleteRaw * tcConv;
+  const fasonPesos  = fasonRaw * tcConv;
+  const comPesos    = comRaw   * tcConv;
+  const gasPesos    = gasRaw   * tcConv;
   updatePriceLabels();
   return{
     cot:document.getElementById('nr_cot').value.trim(),
@@ -1210,10 +1351,10 @@ function getForm(){
     compra:compraPesos,
     compraRaw:compraRaw,
     tc_c,
-    flete:parseFloat(document.getElementById('nr_flete').value)||0,
-    fason:parseFloat(document.getElementById('nr_fason').value)||0,
-    com:parseFloat(document.getElementById('nr_com').value)||0,
-    gas:parseFloat(document.getElementById('nr_gas').value)||0,
+    flete:fletePesos, fleteRaw:fleteRaw,
+    fason:fasonPesos, fasonRaw:fasonRaw,
+    com:comPesos,     comRaw:comRaw,
+    gas:gasPesos,     gasRaw:gasRaw,
     tc_v,
     venta:ventaPesos,
     ventaRaw:ventaRaw,
