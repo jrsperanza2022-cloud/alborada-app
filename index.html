@@ -544,6 +544,7 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
   <div class="section">
     <div class="sec-hdr">
       <div class="sec-title">Granos (U$S/Ton) <span class="sec-src" id="grainSrc">Yahoo Finance · CBOT · gratis</span></div>
+      <div id="piz_bcr" style="display:none;margin-bottom:10px;padding:8px 12px;background:rgba(46,184,114,.04);border:1px solid rgba(46,184,114,.12);border-radius:8px"></div>
       <button class="btn btn-g" id="btnFetchGrain" onclick="fetchCBOT()" style="font-size:.72rem;padding:5px 11px">⟳ Actualizar precios</button>
     </div>
     <div class="comm-grid">
@@ -1124,6 +1125,30 @@ function applyTCData(data){
   updateBrechas(); liveCalc(); calcFX(); calcSim();
 }
 
+async function fetchDivisa(){
+  // Divisa BNA no está en dolarapi /v1/dolares — está en /v1/ambito/dolares
+  const urls = [
+    'https://dolarapi.com/v1/ambito/dolares',
+    'https://api.argentinadatos.com/v1/cotizaciones/dolares',
+  ];
+  for(const url of urls){
+    try{
+      const res = await fetch(url,{signal:AbortSignal.timeout(6000)});
+      if(!res.ok) continue;
+      const data = await res.json();
+      const divisa = data.find(d=>(d.casa||d.nombre||'').toLowerCase().includes('divis'));
+      if(divisa && divisa.venta > 0){
+        apiD.divisa = parseFloat(divisa.venta);
+        apiD.divisa_c = parseFloat(divisa.compra||divisa.venta);
+        const ts = new Date().toLocaleString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+        setTCCard('div', apiD.divisa_c, apiD.divisa, ts);
+        updateBrechas(); liveCalc();
+        return;
+      }
+    }catch(e){}
+  }
+}
+
 async function fetchTC(){
   const dot=document.getElementById('dotTC'), st=document.getElementById('stTC');
   dot.className='dot dload'; st.textContent='TC...';
@@ -1135,6 +1160,7 @@ async function fetchTC(){
       const data=await res.json();
       if(data && (Array.isArray(data)?data.length>0:true)){
         applyTCData(data);
+        fetchDivisa(); // siempre buscar divisa por separado
         dot.className='dot dok'; st.textContent='TC ✓ '+new Date().toLocaleTimeString('es-AR');
         return;
       }
@@ -1246,6 +1272,24 @@ async function fetchCBOT(){
       const ts2 = new Date().toLocaleTimeString('es-AR');
       setTCCard('div', apiD.divisa_c, apiD.divisa, ts2);
       updateBrechas();
+    }
+
+    // Pizarra CAC BCR — granos en pesos/ton Rosario (referencia local)
+    if(precios.pizSoja || precios.pizMaiz || precios.pizGirasol){
+      const pizEl = document.getElementById('piz_bcr');
+      if(pizEl){
+        const fmt = v => v ? '$ '+Math.round(v).toLocaleString('es-AR') : '—';
+        pizEl.innerHTML =
+          `<span style="color:var(--muted);font-size:.6rem;text-transform:uppercase;font-family:'JetBrains Mono',monospace;letter-spacing:.1em">📍 Pizarra CAC Rosario</span>` +
+          `<div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:4px">` +
+          (precios.pizSoja    ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:.72rem">🌱 Soja <b>${fmt(precios.pizSoja)}</b>/Ton</span>` : '') +
+          (precios.pizMaiz    ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:.72rem">🌽 Maíz <b>${fmt(precios.pizMaiz)}</b>/Ton</span>` : '') +
+          (precios.pizGirasol ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:.72rem">🌻 Girasol <b>${fmt(precios.pizGirasol)}</b>/Ton</span>` : '') +
+          (precios.pizTrigo   ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:.72rem">🌾 Trigo <b>${fmt(precios.pizTrigo)}</b>/Ton</span>` : '') +
+          (precios.pizSorgo   ? `<span style="background:var(--s1);border:1px solid var(--border);border-radius:5px;padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:.72rem">🟤 Sorgo <b>${fmt(precios.pizSorgo)}</b>/Ton</span>` : '') +
+          `</div>`;
+        pizEl.style.display = '';
+      }
     }
 
     const expellerIds=new Set(['expSoja','expGirasol']);
