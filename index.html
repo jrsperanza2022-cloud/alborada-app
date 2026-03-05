@@ -1366,21 +1366,61 @@ function liveCalc(){
     </div>`;
   }
 
-  // -- CONVERTIDOR COMPRA --
+  // -- CONVERTIDOR COMPRA + COSTOS --
   const compraRaw = r.compraRaw || 0;
+  const totalCostosUSD = r.fleteRaw + r.fasonRaw + r.comRaw + r.gasRaw;
+  const totalCompraConCostos = compraRaw + totalCostosUSD;
   const eqTcC = (document.getElementById('eq_tc_c')||{value:'pesos'}).value;
   const cc = document.getElementById('conv_compra');
+  const rCV = getTC(r.tc_v)||getTC(r.tc_c)||1;
   if(cc){
     if(compraRaw > 0){
-      cc.innerHTML = convBox(compraRaw, r.tc_c, eqTcC, 'var(--gold2)');
+      const tcOVal = getTC(r.tc_c)||1;
+      const tcDVal = getTC(eqTcC)||1;
+      const pesosSoloCompra   = compraRaw * tcOVal;
+      const pesosConCostos    = totalCompraConCostos * tcOVal;
+      const hasCostos = totalCostosUSD > 0;
+
+      // Equivalencia en TC destino
+      function toEq(usd){
+        if(eqTcC==='pesos') return `$ ${Math.round(usd*tcOVal).toLocaleString('es-AR')}`;
+        return `U$S ${Math.round(usd*tcOVal/tcDVal).toLocaleString('es-AR')}`;
+      }
+      const eqLabel = eqTcC==='pesos' ? 'Pesos Argentinos' : tcLabel(eqTcC);
+      const tcSub   = eqTcC==='pesos'
+        ? `TC ${tcLabel(r.tc_c)}: $${Math.round(tcOVal).toLocaleString('es-AR')}/U$S`
+        : `TC ${tcLabel(eqTcC)}: $${Math.round(tcDVal).toLocaleString('es-AR')}/U$S`;
+
+      cc.innerHTML = `<div style="background:var(--s1);border:1px solid var(--border2);border-radius:9px;padding:10px 14px">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+          <!-- Columna izquierda: desglose USD -->
+          <div style="min-width:160px">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase">Pagás en ${tcLabel(r.tc_c)}</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.85rem;color:var(--text)">U$S ${compraRaw.toLocaleString('es-AR')} compra</div>
+            ${hasCostos ? `
+            ${r.fleteRaw ? `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)">+ U$S ${r.fleteRaw} flete</div>` : ''}
+            ${r.fasonRaw ? `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)">+ U$S ${r.fasonRaw} fasón</div>` : ''}
+            ${r.comRaw   ? `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)">+ U$S ${r.comRaw} comisión</div>` : ''}
+            ${r.gasRaw   ? `<div style="font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--muted)">+ U$S ${r.gasRaw} gastos</div>` : ''}
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.85rem;font-weight:700;color:var(--orange);margin-top:4px;padding-top:4px;border-top:1px solid rgba(217,127,46,.2)">= U$S ${totalCompraConCostos.toLocaleString('es-AR')} total</div>
+            ` : ''}
+          </div>
+          <div style="font-size:1.4rem;color:var(--muted)">→</div>
+          <!-- Columna derecha: equivalencia -->
+          <div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);margin-bottom:4px;text-transform:uppercase">en ${eqLabel}</div>
+            ${hasCostos ? `<div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;color:var(--muted)">${toEq(compraRaw)} solo compra</div>` : ''}
+            <div style="font-family:'JetBrains Mono',monospace;font-size:${hasCostos?'1.25':'1.4'}rem;font-weight:800;color:var(--gold2)">${toEq(totalCompraConCostos)}${hasCostos?' total':''}/Ton</div>
+            <div style="font-family:'JetBrains Mono',monospace;font-size:.63rem;color:var(--muted);margin-top:3px">${tcSub}</div>
+          </div>
+        </div>
+      </div>`;
     } else {
       cc.innerHTML = '<div style="font-family:monospace;font-size:.65rem;color:var(--muted);padding:4px 0">Ingresá el precio de compra para ver la equivalencia</div>';
     }
   }
 
-  // -- CONVERTIDOR COSTOS --
-  const rCV = getTC(r.tc_v)||getTC(r.tc_c)||1;
-  const totalCostosUSD = r.fleteRaw + r.fasonRaw + r.comRaw + r.gasRaw;
+  // -- CONVERTIDOR COSTOS (chips detalle debajo) --
   const cc2 = document.getElementById('conv_costos');
   if(cc2 && totalCostosUSD > 0){
     cc2.innerHTML = `<div style="display:flex;flex-wrap:wrap;gap:8px;font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--muted)">
