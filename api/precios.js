@@ -54,7 +54,25 @@ export default async function handler(req, res) {
     } else { errors.push(`argentinadatos HTTP ${r.status}`); }
   } catch (e) { errors.push(`argentinadatos: ${e.message}`); }
 
-  // Fallback divisa: BNA scraping
+  // Fallback A: dolarapi.com — incluye divisa como casa separada
+  if (!out.divisa_sell) {
+    try {
+      const r = await fetch('https://dolarapi.com/v1/dolares', {
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
+        signal: AbortSignal.timeout(8000)
+      });
+      if (r.ok) {
+        const data = await r.json();
+        const divisa = data.find(d => (d.casa || '').toLowerCase().includes('divis'));
+        if (divisa && divisa.venta > 0) {
+          out.divisa_sell = divisa.venta;
+          out.divisa_buy  = divisa.compra || divisa.venta;
+        } else { errors.push('dolarapi: divisa no encontrada, casas=' + data.map(d => d.casa).join(',')); }
+      } else { errors.push(`dolarapi HTTP ${r.status}`); }
+    } catch (e) { errors.push(`dolarapi divisa: ${e.message}`); }
+  }
+
+  // Fallback B: BNA scraping directo
   if (!out.divisa_sell) {
     try {
       const r = await fetch('https://www.bna.com.ar/Personas', {
@@ -73,10 +91,9 @@ export default async function handler(req, res) {
     } catch (e) { errors.push(`BNA fallback: ${e.message}`); }
   }
 
-  // ── 3. AFA SCL — afascl.coop/afadiario/mercados-en-linea ─
-  // Fuente: Asociación de Federadas Argentinas (AFA)
-  // Provee: pizarra granos $/Ton, CBOT aceite USD/Ton (delay 20min),
-  //         futuros MatbaRofex Soja/Maíz/Trigo Rosario en USD
+  // ── 3. AFA SCL — afascl.coop/afadiario/mercados-en-linea ──
+  // Reemplaza expeller.com.ar (dominio caido).
+  // Provee: pizarra granos $/Ton, aceite CBOT USD/Ton (delay 20min), futuros Rofex
   try {
     const r = await fetch('https://www.afascl.coop/afadiario/mercados-en-linea', {
       headers: {
@@ -90,19 +107,16 @@ export default async function handler(req, res) {
     if (r.ok) {
       const html = await r.text();
 
-      // ── Pizarra granos en $/Ton ──────────────────────────
-      // Estructura: "Soja
-San Martín
-#### $ 462000"
+      // Pizarra granos en $/Ton — busca label seguido de $NNNNN
       const parsePizarra = (label) => {
-        const re = new RegExp(label + '[\s\S]{0,120}?\$\s*([\d\.]+)', 'i');
+        const re = new RegExp(label + '[\\s\\S]{0,150}?\\$\\s*([\\d\\.]+)', 'i');
         const m = html.match(re);
         if (!m) return null;
         const v = parseFloat(m[1].replace(/\./g, ''));
         return (v > 10000 && v < 9999999) ? v : null;
       };
       const afaSoja    = parsePizarra('Soja');
-      const afaMaiz    = parsePizarra('Maíz');
+      const afaMaiz    = parsePizarra('Ma');
       const afaGirasol = parsePizarra('Girasol');
       const afaTrigo   = parsePizarra('Trigo');
       const afaSorgo   = parsePizarra('Sorgo');
@@ -112,36 +126,29 @@ San Martín
       if (afaTrigo)   out.pizTrigo   = afaTrigo;
       if (afaSorgo)   out.pizSorgo   = afaSorgo;
 
-      // ── CBOT Aceite en USD/Ton (delay 20min) ─────────────
-      // Tabla CMA-CBOT: fila "Aceite | Mar 26 | diff | precio"
-      // precio ya viene en USD/Ton métrica
-      const aceiteRe = /Aceite[\s\S]{0,60}?([\d]+\.[\d]+)/i;
-      const aceiteM  = html.match(aceiteRe);
+      // Aceite CBOT USD/Ton — tabla CMA-CBOT, fila "Aceite"
+      const aceiteM = html.match(/Aceite[\s\S]{0,80}?([\d]+\.[\d]+)/i);
       if (aceiteM) {
-        const aceiteUSD = parseFloat(aceiteM[1]);
-        if (aceiteUSD > 500 && aceiteUSD < 5000) {
-          // Aceite soja crudo CBOT en USD/Ton — usarlo directo
-          out.aSC = Math.round(aceiteUSD * 1.00);  // crudo
-          out.aSR = Math.round(aceiteUSD * 1.04);  // refinado soja
-          out.aMC = Math.round(aceiteUSD * 0.88);  // crudo maíz
-          out.aMR = Math.round(aceiteUSD * 0.92);  // refinado maíz
-          out.aGC = Math.round(aceiteUSD * 1.15);  // crudo girasol
-          out.aGR = Math.round(aceiteUSD * 1.20);  // refinado girasol
+        const v = parseFloat(aceiteM[1]);
+        if (v > 500 && v < 5000) {
+          out.aSC = Math.round(v * 1.00);
+          out.aSR = Math.round(v * 1.04);
+          out.aMC = Math.round(v * 0.88);
+          out.aMR = Math.round(v * 0.92);
+          out.aGC = Math.round(v * 1.15);
+          out.aGR = Math.round(v * 1.20);
         }
       }
 
-      // ── MatbaRofex: soja disponible más cercano en USD/Ton ─
-      // Fila más líquida: SOJ.ROS/MAY26 o similar con ajuste > 0
-      const rofexSojaRe = /SOJ\.ROS\/\w+[\s|]+[\d.]+[\s|]+[\d.]*[\s|]+[\d.]*[\s|]+([\d.]+)/g;
-      let rofexBestSoja = null;
+      // Futuros Rofex Soja Rosario — primer ajuste valido en USD/Ton
+      const rofexRe = /SOJ\.ROS\/\w+\s*\|\s*[\d.]*\s*\|\s*[\d.]*\s*\|\s*[\d.]*\s*\|\s*([\d.]+)/g;
       let rm;
-      while ((rm = rofexSojaRe.exec(html)) !== null) {
+      while ((rm = rofexRe.exec(html)) !== null) {
         const ajuste = parseFloat(rm[1]);
-        if (ajuste > 200 && ajuste < 1000) { rofexBestSoja = ajuste; break; }
+        if (ajuste > 200 && ajuste < 1000) { out.rofexSoja = ajuste; break; }
       }
-      if (rofexBestSoja) out.rofexSoja = rofexBestSoja;
 
-      if (!afaSoja && !aceiteM) errors.push('AFA: sin datos parseables');
+      if (!afaSoja && !aceiteM) errors.push('AFA: sin datos parseables en HTML');
     } else { errors.push(`AFA HTTP ${r.status}`); }
   } catch (e) { errors.push(`AFA: ${e.message}`); }
 
