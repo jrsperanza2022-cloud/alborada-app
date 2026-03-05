@@ -280,6 +280,140 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
 @keyframes fUp{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+/* ── COMERCIO INTERNACIONAL ── */
+
+#tab-comercio :root {
+  --bg:#0d0d0f; --s1:#111118; --s2:#14141a; --s3:#1a1a22; --s4:#20202a;
+  --border:#28283a; --border2:#32323d;
+  --gold:#c8a84b; --gold2:#e8c96a;
+  --green:#2eb872; --green2:#47d688;
+  --red:#d94f4f; --red2:#f06060;
+  --blue:#3d8fe0; --blue2:#5aaaf5;
+  --orange:#d97f2e; --teal:#26b8a0;
+  --text:#d0d8e0; --muted:#5e7878; --dim:#32323d;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+#tab-comercio html {scroll-behavior:smooth;}
+#tab-comercio body {
+  font-family:'Nunito',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+  font-size:15px;
+}
+#tab-comercio body::before {
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:linear-gradient(rgba(200,168,75,.015) 1px,transparent 1px),
+                   linear-gradient(90deg,rgba(200,168,75,.015) 1px,transparent 1px);
+  background-size:48px 48px;
+}
+#tab-comercio .wrap {position:relative;z-index:1;max-width:100%;margin:0 auto;padding:20px 16px 60px;}
+
+/* HEADER */
+#tab-comercio header {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:18px;}
+#tab-comercio .brand {display:flex;align-items:center;gap:14px;}
+#tab-comercio .brand-icon {width:44px;height:44px;background:linear-gradient(135deg,var(--gold),var(--blue));border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
+#tab-comercio .brand-text h1 {font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;line-height:1;}
+#tab-comercio .brand-text h1 span {color:var(--gold);}
+#tab-comercio .brand-text p {font-size:.72rem;color:var(--muted);margin-top:3px;}
+#tab-comercio .header-right {display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+
+/* BUTTONS */
+#tab-comercio .btn {padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;font-weight:700;font-size:.78rem;transition:all .17s;}
+#tab-comercio .btn-p {background:var(--gold);color:var(--bg);}
+#tab-comercio .btn-p:hover {background:var(--gold2);}
+#tab-comercio .btn-s {background:rgba(200,168,75,.08);border:1px solid rgba(200,168,75,.2);color:var(--gold);}
+#tab-comercio .btn-s:hover {background:rgba(200,168,75,.15);}
+#tab-comercio .btn-d {background:rgba(217,79,79,.07);border:1px solid rgba(217,79,79,.2);color:var(--red2);}
+#tab-comercio .btn-d:hover {background:rgba(217,79,79,.14);}
+#tab-comercio .btn-del {background:rgba(217,79,79,.08);border:1px solid rgba(217,79,79,.15);color:var(--red2);width:26px;height:26px;border-radius:5px;font-size:.7rem;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;}
+
+/* BANNER */
+#tab-comercio .banner {display:flex;gap:0;background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:12px 20px;margin-bottom:16px;flex-wrap:wrap;align-items:center;}
+#tab-comercio .banner-item {flex:1;min-width:120px;text-align:center;padding:4px 12px;border-right:1px solid var(--border);}
+#tab-comercio .banner-item:last-child {border-right:none;}
+#tab-comercio .bl {font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+#tab-comercio .bv {font-family:'JetBrains Mono',monospace;font-size:.95rem;font-weight:700;}
+
+/* HELP BOX */
+#tab-comercio .help-box {background:var(--s2);border:1px solid rgba(200,168,75,.2);border-radius:12px;padding:16px 20px;margin-bottom:14px;display:none;}
+#tab-comercio .help-box.open {display:block;}
+#tab-comercio .help-title {font-family:'JetBrains Mono',monospace;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--gold);margin-bottom:10px;}
+#tab-comercio .help-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:6px;}
+#tab-comercio .help-card {background:var(--s3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;display:flex;gap:8px;align-items:center;}
+#tab-comercio .help-code {font-family:'JetBrains Mono',monospace;font-size:.75rem;font-weight:700;color:var(--blue2);flex-shrink:0;}
+#tab-comercio .help-name {font-size:.72rem;color:var(--muted);}
+
+/* TABLE */
+#tab-comercio .table-wrap {background:var(--s2);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:12px;}
+#tab-comercio .table-scroll {overflow-x:auto;}
+#tab-comercio table {width:100%;border-collapse:collapse;font-size:.78rem;}
+#tab-comercio thead th {
+  font-family:'JetBrains Mono',monospace;font-size:.58rem;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);padding:10px 8px;
+  text-align:center;border-bottom:2px solid var(--border);
+  background:var(--s1);white-space:nowrap;line-height:1.5;
+}
+#tab-comercio thead th.col-sub {color:var(--blue2);background:rgba(61,143,224,.08);}
+#tab-comercio thead th.col-tot {color:var(--green2);background:rgba(46,184,114,.08);}
+#tab-comercio tbody tr {border-bottom:1px solid rgba(40,40,58,.8);}
+#tab-comercio tbody tr:hover {background:rgba(30,30,40,.4);}
+#tab-comercio td {padding:7px 6px;vertical-align:top;}
+#tab-comercio td.col-sub {background:rgba(61,143,224,.05);border-left:2px solid rgba(61,143,224,.2);}
+#tab-comercio td.col-tot {background:rgba(46,184,114,.05);border-left:2px solid rgba(46,184,114,.2);}
+#tab-comercio tfoot tr {border-top:2px solid var(--border);}
+#tab-comercio tfoot td {padding:9px 6px;font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--muted);}
+#tab-comercio tfoot td.col-sub {background:rgba(61,143,224,.08);border-left:2px solid rgba(61,143,224,.3);color:var(--blue2);font-weight:700;}
+#tab-comercio tfoot td.col-tot {background:rgba(46,184,114,.08);border-left:2px solid rgba(46,184,114,.3);color:var(--green2);font-weight:700;}
+
+/* FORM CONTROLS */
+#tab-comercio select, #tab-comercio input[type=number] {
+  background:var(--s3);border:1px solid var(--border2);color:var(--text);
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;
+  padding:5px 7px;border-radius:6px;outline:none;transition:border-color .2s;
+  width:100%;
+}
+#tab-comercio select:focus, #tab-comercio input[type=number]:focus {border-color:var(--gold);}
+#tab-comercio select option {background:var(--s1);}
+#tab-comercio input[type=number]::placeholder {color:var(--dim);}
+#tab-comercio .sub-calc {font-size:.58rem;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:3px;}
+#tab-comercio .calc-val {font-family:'JetBrains Mono',monospace;font-size:.88rem;font-weight:600;text-align:right;}
+#tab-comercio .calc-break {margin-top:4px;display:flex;flex-direction:column;gap:1px;}
+#tab-comercio .calc-break-item {font-size:.56rem;color:var(--muted);font-family:'JetBrains Mono',monospace;text-align:right;}
+
+/* COL WIDTHS */
+#tab-comercio .w-prod {min-width:175px;}
+#tab-comercio .w-num {min-width:88px;}
+#tab-comercio .w-dep {min-width:120px;}
+#tab-comercio .w-pue {min-width:120px;}
+#tab-comercio .w-aran {min-width:85px;}
+#tab-comercio .w-inc {min-width:175px;}
+#tab-comercio .w-pos {min-width:210px;}
+#tab-comercio .w-ton {min-width:70px;}
+#tab-comercio .w-sub {min-width:155px;}
+#tab-comercio .w-tot {min-width:155px;}
+
+/* ADD ROW */
+#tab-comercio .add-row-btn {
+  display:block;width:100%;padding:11px;
+  background:rgba(200,168,75,.07);border:1px dashed rgba(200,168,75,.25);
+  color:var(--gold);border-radius:10px;font-size:.8rem;font-weight:700;
+  cursor:pointer;margin-bottom:14px;transition:all .2s;
+  font-family:'Nunito',sans-serif;
+}
+#tab-comercio .add-row-btn:hover {background:rgba(200,168,75,.13);}
+
+/* LEGEND */
+#tab-comercio .legend {background:var(--s2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:12px;}
+#tab-comercio .legend-title {font-family:'JetBrains Mono',monospace;font-size:.62rem;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+#tab-comercio .legend-grid {display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:6px;}
+#tab-comercio .legend-item {font-size:.72rem;color:var(--muted);line-height:1.5;}
+#tab-comercio .legend-item a {color:var(--blue2);}
+
+#tab-comercio footer {text-align:center;color:var(--dim);font-size:.65rem;font-family:'JetBrains Mono',monospace;padding:10px 0;}
+
 </style>
 </head>
 <body>
@@ -310,6 +444,7 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
   <button class="tab" onclick="showTab('hist')">🗂 Historial</button>
   <button class="tab" onclick="showTab('conversor')">💱 Conversor</button>
   <button class="tab" onclick="showTab('info')">📚 Info Comercial</button>
+  <button class="tab" onclick="showTab('comercio');ciInit()">🌐 Comercio Intl.</button>
 </div>
 
 <!-- ══════════ MERCADO ══════════ -->
@@ -801,6 +936,104 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
   <div class="modal" id="modalContent"></div>
 </div>
 
+
+<!-- ══════════ COMERCIO INTERNACIONAL ══════════ -->
+<div id="tab-comercio" class="tab-content">
+
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="brand">
+    <div class="brand-icon">🌐</div>
+    <div class="brand-text">
+      <h1>Comercio <span>Internacional</span></h1>
+      <p>Calculadora de costos de exportación · Argentina</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-s" onclick="ciToggleHelp()">Incoterms</button>
+    <button class="btn btn-s" onclick="ciExportCSV()">Exportar CSV</button>
+    <button class="btn btn-d" onclick="clearAll()">Borrar todo</button>
+    <button class="btn btn-p" onclick="addRow()">+ Nueva fila</button>
+  </div>
+</header>
+
+<!-- INCOTERMS HELP -->
+<div class="help-box" id="helpBox">
+  <div class="help-title">Incoterms 2020 — Referencia rápida</div>
+  <div class="help-grid" id="ci_helpGrid"></div>
+</div>
+
+<!-- BANNER -->
+<div class="banner">
+  <div class="banner-item">
+    <div class="bl">Operaciones</div>
+    <div class="bv" id="b_n" style="color:var(--gold)">0</div>
+  </div>
+  <div class="banner-item">
+    <div class="bl">Subtotal U$S/T promedio</div>
+    <div class="bv" id="b_sub" style="color:var(--blue2)">—</div>
+  </div>
+  <div class="banner-item">
+    <div class="bl">Total U$S acumulado</div>
+    <div class="bv" id="b_tot" style="color:var(--green2);font-size:1rem">—</div>
+  </div>
+  <div class="banner-item" style="opacity:.6">
+    <div class="bl">Posiciones arancelarias</div>
+    <a href="https://www.vuce.gob.ar/" target="_blank" style="color:var(--blue2);font-family:'JetBrains Mono',monospace;font-size:.75rem;text-decoration:none;">vuce.gob.ar</a>
+  </div>
+</div>
+
+<!-- TABLE -->
+<div class="table-wrap">
+  <div class="table-scroll">
+    <table id="mainTable">
+      <thead>
+        <tr>
+          <th class="w-prod">Producto</th>
+          <th class="w-num">Desp. Aduana<br>U$S/T</th>
+          <th class="w-dep">Depósito<br>Fiscal</th>
+          <th class="w-num">Costo Dep.<br>U$S/T</th>
+          <th class="w-aran">Arancel<br>Tributado</th>
+          <th class="w-pue">Puerto</th>
+          <th class="w-num">Costo Puerto<br>U$S/T</th>
+          <th class="w-num">Flete desde<br>Planta U$S/T</th>
+          <th class="w-num">Flete<br>Interno U$S/T</th>
+          <th class="w-num">Flexitanq<br>U$S/T</th>
+          <th class="w-num">Valor Base<br>U$S/T</th>
+          <th class="w-inc">Incoterm</th>
+          <th class="w-pos">Posición<br>Arancelaria</th>
+          <th class="w-ton">Tons</th>
+          <th class="w-sub col-sub">SUBTOTAL<br>U$S/T</th>
+          <th class="w-tot col-tot">TOTAL<br>U$S</th>
+          <th style="width:32px"></th>
+        </tr>
+      </thead>
+      <tbody id="ci_tbody"></tbody>
+      <tfoot id="ci_tfoot"></tfoot>
+    </table>
+  </div>
+</div>
+
+<button class="add-row-btn" onclick="addRow()">+ Agregar nueva operación</button>
+
+<!-- LEGEND -->
+<div class="legend">
+  <div class="legend-title">Como usar</div>
+  <div class="legend-grid">
+    <div class="legend-item"><span style="color:var(--gold)">Valor Base U$S/T</span> — Precio FOB de la mercadería, base para calcular el monto del arancel en dólares</div>
+    <div class="legend-item"><span style="color:var(--blue2)">Subtotal U$S/T</span> — Suma de todos los costos: aduana + depósito + fletes + puerto + arancel calculado</div>
+    <div class="legend-item"><span style="color:var(--green2)">Total U$S</span> — Subtotal por tonelada multiplicado por la cantidad de toneladas</div>
+    <div class="legend-item"><span style="color:var(--orange)">Posición arancelaria</span> — Verificar código NCM en <a href="https://www.vuce.gob.ar/" target="_blank">vuce.gob.ar</a></div>
+  </div>
+</div>
+
+<footer>Comercio Internacional · Costos de Exportación · Argentina · 2026</footer>
+</div>
+
+
+</div>
 </div><!-- /wrap -->
 <script>
 // ══════════════════════════════════════════════════════════
@@ -1759,6 +1992,391 @@ initApiKeyUI();
 render();
 updatePriceLabels();
 refreshAll();
+
+// ── DATA ──────────────────────────────────────────────────
+const PRODUCTS = [
+  'Aceite crudo de girasol','Aceite crudo de maíz','Aceite crudo de soja',
+  'Aceite de Oliva','Aceite mezcla comestible','Aceite mezcla uso industrial',
+  'Aceite refinado de girasol','Aceite refinado de maíz','Aceite refinado de soja',
+  'Aceitunas','Arroz','Azúcar','Carnes','Legumbres','Yerba Mate'
+];
+
+const DEPOSITOS = ['Alborada','Pérez','Roldán','Rosario','Santa Fe'];
+const PUERTOS   = ['Buenos Aires','Campana','Rosario','Santa Fe'];
+
+const INCOTERMS = [
+  {code:'EXW', name:'Ex Works'},
+  {code:'FCA', name:'Free Carrier'},
+  {code:'FAS', name:'Free Alongside Ship'},
+  {code:'FOB', name:'Free On Board'},
+  {code:'CFR', name:'Cost and Freight'},
+  {code:'CIF', name:'Cost, Insurance and Freight'},
+  {code:'CPT', name:'Carriage Paid To'},
+  {code:'CIP', name:'Carriage and Insurance Paid To'},
+  {code:'DAP', name:'Delivered At Place'},
+  {code:'DPU', name:'Delivered at Place Unloaded'},
+  {code:'DDP', name:'Delivered Duty Paid'},
+];
+
+const POSICIONES = [
+  // ── CAPÍTULO 15 — Grasas y aceites animales o vegetales ──
+  {code:'1501.10.00', desc:'Cap.15 · Manteca de cerdo para uso industrial'},
+  {code:'1501.20.00', desc:'Cap.15 · Manteca de cerdo, los demás'},
+  {code:'1501.90.00', desc:'Cap.15 · Otras grasas de cerdo y aves de corral'},
+  {code:'1502.10.00', desc:'Cap.15 · Sebo bovino, ovino o caprino para uso industrial'},
+  {code:'1502.90.10', desc:'Cap.15 · Sebo bovino refinado'},
+  {code:'1502.90.90', desc:'Cap.15 · Sebo bovino, ovino o caprino, los demás'},
+  {code:'1503.00.10', desc:'Cap.15 · Estearina solar y oleoestearina'},
+  {code:'1503.00.90', desc:'Cap.15 · Aceite de manteca de cerdo, los demás'},
+  {code:'1504.10.00', desc:'Cap.15 · Aceites de hígado de pescado y sus fracciones'},
+  {code:'1504.20.10', desc:'Cap.15 · Aceites de pescado en bruto'},
+  {code:'1504.20.90', desc:'Cap.15 · Grasas y aceites de pescado, los demás'},
+  {code:'1504.30.00', desc:'Cap.15 · Grasas y aceites de mamíferos marinos'},
+  {code:'1505.00.10', desc:'Cap.15 · Grasa de lana (suarda) en bruto'},
+  {code:'1505.00.90', desc:'Cap.15 · Grasa de lana y sustancias grasas derivadas'},
+  {code:'1506.00.00', desc:'Cap.15 · Otras grasas y aceites animales, fracciones'},
+  {code:'1507.10.00', desc:'Cap.15 · Aceite de soja en bruto, incluso desgomado'},
+  {code:'1507.90.11', desc:'Cap.15 · Aceite de soja refinado, en envases ≤5L'},
+  {code:'1507.90.19', desc:'Cap.15 · Aceite de soja refinado, los demás'},
+  {code:'1507.90.90', desc:'Cap.15 · Aceite de soja, otras fracciones'},
+  {code:'1508.10.00', desc:'Cap.15 · Aceite de cacahuate/maní en bruto'},
+  {code:'1508.90.00', desc:'Cap.15 · Aceite de cacahuate/maní, los demás'},
+  {code:'1509.10.10', desc:'Cap.15 · Aceite de oliva virgen extra'},
+  {code:'1509.10.20', desc:'Cap.15 · Aceite de oliva virgen corriente'},
+  {code:'1509.10.90', desc:'Cap.15 · Aceite de oliva virgen, los demás'},
+  {code:'1509.90.00', desc:'Cap.15 · Aceite de oliva refinado y mezclas'},
+  {code:'1510.00.10', desc:'Cap.15 · Aceite de orujo de oliva en bruto'},
+  {code:'1510.00.90', desc:'Cap.15 · Otros aceites obtenidos de la oliva'},
+  {code:'1511.10.00', desc:'Cap.15 · Aceite de palma en bruto'},
+  {code:'1511.90.10', desc:'Cap.15 · Aceite de palma refinado, en envases ≤5L'},
+  {code:'1511.90.20', desc:'Cap.15 · Aceite de palma refinado, a granel'},
+  {code:'1511.90.90', desc:'Cap.15 · Aceite de palma, otras fracciones'},
+  {code:'1512.11.10', desc:'Cap.15 · Aceite de girasol en bruto, uso alimentario'},
+  {code:'1512.11.90', desc:'Cap.15 · Aceite de girasol en bruto, los demás'},
+  {code:'1512.19.10', desc:'Cap.15 · Aceite de girasol refinado, en envases ≤5L'},
+  {code:'1512.19.20', desc:'Cap.15 · Aceite de girasol refinado, a granel'},
+  {code:'1512.19.90', desc:'Cap.15 · Aceite de girasol refinado, los demás'},
+  {code:'1512.21.00', desc:'Cap.15 · Aceite de algodón en bruto'},
+  {code:'1512.29.10', desc:'Cap.15 · Aceite de algodón refinado, en envases ≤5L'},
+  {code:'1512.29.90', desc:'Cap.15 · Aceite de algodón refinado, los demás'},
+  {code:'1513.11.00', desc:'Cap.15 · Aceite de coco (copra) en bruto'},
+  {code:'1513.19.10', desc:'Cap.15 · Aceite de coco refinado, en envases ≤5L'},
+  {code:'1513.19.90', desc:'Cap.15 · Aceite de coco refinado, los demás'},
+  {code:'1513.21.00', desc:'Cap.15 · Aceite de almendra de palma en bruto'},
+  {code:'1513.29.10', desc:'Cap.15 · Aceite de almendra de palma refinado, en envases ≤5L'},
+  {code:'1513.29.90', desc:'Cap.15 · Aceite de almendra de palma refinado, los demás'},
+  {code:'1514.11.00', desc:'Cap.15 · Aceite de colza/canola en bruto, bajo contenido erúcico'},
+  {code:'1514.19.10', desc:'Cap.15 · Aceite de colza/canola refinado, en envases ≤5L'},
+  {code:'1514.19.90', desc:'Cap.15 · Aceite de colza/canola refinado, los demás'},
+  {code:'1514.91.00', desc:'Cap.15 · Otros aceites de colza/nabo en bruto'},
+  {code:'1514.99.10', desc:'Cap.15 · Otros aceites de colza/nabo refinados, en envases ≤5L'},
+  {code:'1514.99.90', desc:'Cap.15 · Otros aceites de colza/nabo refinados, los demás'},
+  {code:'1515.11.00', desc:'Cap.15 · Aceite de linaza en bruto'},
+  {code:'1515.19.00', desc:'Cap.15 · Aceite de linaza, los demás'},
+  {code:'1515.21.00', desc:'Cap.15 · Aceite de maíz en bruto'},
+  {code:'1515.29.10', desc:'Cap.15 · Aceite de maíz refinado, en envases ≤5L'},
+  {code:'1515.29.20', desc:'Cap.15 · Aceite de maíz refinado, a granel'},
+  {code:'1515.29.90', desc:'Cap.15 · Aceite de maíz refinado, los demás'},
+  {code:'1515.30.10', desc:'Cap.15 · Aceite de ricino en bruto'},
+  {code:'1515.30.90', desc:'Cap.15 · Aceite de ricino, los demás'},
+  {code:'1515.50.10', desc:'Cap.15 · Aceite de sésamo en bruto'},
+  {code:'1515.50.90', desc:'Cap.15 · Aceite de sésamo, los demás'},
+  {code:'1515.90.10', desc:'Cap.15 · Aceite de tung/abrasin'},
+  {code:'1515.90.21', desc:'Cap.15 · Aceite de germen de trigo'},
+  {code:'1515.90.29', desc:'Cap.15 · Otros aceites vegetales fijos, los demás'},
+  {code:'1515.90.90', desc:'Cap.15 · Otras grasas y aceites vegetales fijos, mezclas'},
+  {code:'1516.10.00', desc:'Cap.15 · Grasas y aceites animales hidrogenados/interesterificados'},
+  {code:'1516.20.10', desc:'Cap.15 · Aceite de soja hidrogenado'},
+  {code:'1516.20.21', desc:'Cap.15 · Aceite de palma hidrogenado, en envases ≤5L'},
+  {code:'1516.20.29', desc:'Cap.15 · Aceite de palma hidrogenado, los demás'},
+  {code:'1516.20.90', desc:'Cap.15 · Otros aceites vegetales hidrogenados/interesterificados'},
+  {code:'1517.10.00', desc:'Cap.15 · Margarina, excepto margarina líquida'},
+  {code:'1517.90.10', desc:'Cap.15 · Mezclas o preparaciones alimenticias de grasas/aceites'},
+  {code:'1517.90.20', desc:'Cap.15 · Margarina líquida'},
+  {code:'1517.90.90', desc:'Cap.15 · Mezclas aceites/grasas vegetales comestibles, los demás'},
+  {code:'1518.00.10', desc:'Cap.15 · Aceites y grasas animales/vegetales cocidos, oxidados'},
+  {code:'1518.00.20', desc:'Cap.15 · Linoxina'},
+  {code:'1518.00.90', desc:'Cap.15 · Otras mezclas no comestibles de grasas/aceites'},
+  {code:'1520.00.00', desc:'Cap.15 · Glicerol en bruto; aguas y lejías glicerosas'},
+  {code:'1521.10.00', desc:'Cap.15 · Ceras vegetales (excepto triglicéridos)'},
+  {code:'1521.90.00', desc:'Cap.15 · Cera de abejas y demás insectos, espermaceti'},
+  {code:'1522.00.10', desc:'Cap.15 · Degrás'},
+  {code:'1522.00.90', desc:'Cap.15 · Residuos del tratamiento de grasas/aceites'},
+  // ── ARROZ ──
+  {code:'1006.10.00', desc:'Arroz con cáscara (paddy)'},
+  {code:'1006.20.00', desc:'Arroz descascarillado (cargo o pardo)'},
+  {code:'1006.30.21', desc:'Arroz semiblanqueado o blanqueado'},
+  {code:'1006.30.91', desc:'Arroz blanqueado pulido o glaseado'},
+  {code:'1006.40.00', desc:'Arroz partido'},
+  // ── AZÚCAR ──
+  {code:'1701.12.00', desc:'Azúcar de remolacha en bruto'},
+  {code:'1701.13.00', desc:'Azúcar de caña en bruto para refinar'},
+  {code:'1701.14.00', desc:'Azúcar de caña en bruto, los demás'},
+  {code:'1701.91.00', desc:'Azúcar con adición de aromatizante o colorante'},
+  {code:'1701.99.00', desc:'Azúcar blanco refinado'},
+  // ── ACEITUNAS ──
+  {code:'0711.20.00', desc:'Aceitunas conservadas provisionalmente'},
+  {code:'2005.70.10', desc:'Aceitunas en conserva, en envases ≤1 kg'},
+  {code:'2005.70.90', desc:'Aceitunas en conserva, los demás'},
+  // ── CARNES ──
+  {code:'0201.10.00', desc:'Carne bovina fresca/refrigerada, en canales'},
+  {code:'0201.20.00', desc:'Carne bovina fresca/refrigerada, otros cortes con hueso'},
+  {code:'0201.30.00', desc:'Carne bovina fresca/refrigerada, deshuesada'},
+  {code:'0202.10.00', desc:'Carne bovina congelada, en canales'},
+  {code:'0202.20.00', desc:'Carne bovina congelada, otros cortes con hueso'},
+  {code:'0202.30.00', desc:'Carne bovina congelada, deshuesada'},
+  {code:'0203.11.00', desc:'Carne porcina fresca, en canales'},
+  {code:'0203.12.00', desc:'Carne porcina fresca, piernas y trozos'},
+  {code:'0203.19.00', desc:'Carne porcina fresca, los demás'},
+  {code:'0203.21.00', desc:'Carne porcina congelada, en canales'},
+  {code:'0203.22.00', desc:'Carne porcina congelada, piernas y trozos'},
+  {code:'0203.29.00', desc:'Carne porcina congelada, los demás'},
+  {code:'0207.11.00', desc:'Carne de gallo/gallina sin trocear, fresca/refrigerada'},
+  {code:'0207.12.00', desc:'Carne de gallo/gallina sin trocear, congelada'},
+  {code:'0207.13.00', desc:'Trozos y despojos de gallo/gallina, frescos/refrigerados'},
+  {code:'0207.14.00', desc:'Trozos y despojos de gallo/gallina, congelados'},
+  // ── LEGUMBRES ──
+  {code:'0713.10.10', desc:'Arvejas (guisantes) secas desvainadas'},
+  {code:'0713.20.00', desc:'Garbanzos secos desvainados'},
+  {code:'0713.31.10', desc:'Porotos negros secos desvainados'},
+  {code:'0713.31.90', desc:'Porotos negros, los demás'},
+  {code:'0713.32.00', desc:'Porotos (frijoles) colorados secos'},
+  {code:'0713.33.10', desc:'Porotos (frijoles) blancos secos'},
+  {code:'0713.39.90', desc:'Los demás porotos secos desvainados'},
+  {code:'0713.40.10', desc:'Lentejas secas desvainadas'},
+  {code:'0713.50.00', desc:'Habas y haboncillos secos desvainados'},
+  {code:'0713.60.00', desc:'Gandules (guandúes) secos desvainados'},
+  {code:'0713.90.00', desc:'Las demás legumbres secas desvainadas'},
+  // ── YERBA MATE ──
+  {code:'0903.00.00', desc:'Yerba mate'},
+];
+
+// ── STATE ────────────────────────────────────────────────
+let ciRows = [];
+let ciRowId = 0;
+
+function ciNewRow() {
+  return {
+    id: ciRowId++,
+    producto:'', despAduana:'', deposito:'', costoDeposito:'',
+    arancel:'0', puerto:'', costoPuerto:'', fletePlanta:'',
+    fleteInterno:'', flexitanq:'', valorBase:'',
+    incoterm:'', posicion:'', tons:''
+  };
+}
+
+// ── INIT ─────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  ciBuildIncotermsHelp();
+  addRow();
+});
+
+function ciBuildIncotermsHelp() {
+  const g = document.getElementById('ci_helpGrid');
+  g.innerHTML = INCOTERMS.map(t =>
+    '<div class="help-card"><span class="help-code">'+t.code+'</span><span class="help-name">'+t.name+'</span></div>'
+  ).join('');
+}
+
+function ciToggleHelp() {
+  document.getElementById('helpBox').classList.toggle('open');
+}
+
+// ── CALCULATIONS ─────────────────────────────────────────
+function ciCalcRow(r) {
+  const desp = parseFloat(r.despAduana)    || 0;
+  const dep  = parseFloat(r.costoDeposito) || 0;
+  const fp   = parseFloat(r.fletePlanta)   || 0;
+  const fi   = parseFloat(r.fleteInterno)  || 0;
+  const flex = parseFloat(r.flexitanq)     || 0;
+  const pue  = parseFloat(r.costoPuerto)   || 0;
+  const base = parseFloat(r.valorBase)     || 0;
+  const pct  = parseFloat(r.arancel)       || 0;
+  const tons = parseFloat(r.tons)          || 0;
+  const arancelUSD = base * (pct / 100);
+  const subtotal = desp + dep + fp + fi + flex + pue + arancelUSD;
+  const total = subtotal * tons;
+  return { desp, dep, fp, fi, flex, pue, arancelUSD, subtotal, total, tons };
+}
+
+function ciFmtUSD(n) {
+  if (!n && n !== 0) return '—';
+  return 'U$S ' + parseFloat(n).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+// ── RENDER ───────────────────────────────────────────────
+function ciRender() {
+  const tbody = document.getElementById('ci_tbody');
+  const tfoot = document.getElementById('ci_tfoot');
+  tbody.innerHTML = '';
+
+  let totalSub = 0, totalTot = 0, countRows = 0;
+
+  ciRows.forEach(function(r, idx) {
+    const c = ciCalcRow(r);
+    const pos = POSICIONES.find(function(p){ return p.code === r.posicion; });
+    if (c.subtotal > 0) { totalSub += c.subtotal; totalTot += c.total; countRows++; }
+
+    const arancelText = c.arancelUSD > 0
+      ? '<div class="sub-calc">= ' + ciFmtUSD(c.arancelUSD) + '</div>' : '';
+
+    const breakdownItems = [
+      ['Dep.Ad.', c.desp], ['Depósito', c.dep], ['Ft.Planta', c.fp],
+      ['Ft.Int.', c.fi], ['Flexi', c.flex], ['Puerto', c.pue],
+      ['Arancel', c.arancelUSD]
+    ].filter(function(x){ return x[1] > 0; });
+
+    const breakdown = breakdownItems.length > 0
+      ? '<div class="calc-break">' + breakdownItems.map(function(x){
+          return '<span class="calc-break-item">'+x[0]+': '+fmtUSD(x[1])+'</span>';
+        }).join('') + '</div>' : '';
+
+    const posDesc = pos ? '<div class="sub-calc" title="'+pos.desc+'">'+(pos.desc.length>30?pos.desc.slice(0,30)+'…':pos.desc)+'</div>' : '';
+
+    const tonCalc = (c.tons > 0 && c.subtotal > 0)
+      ? '<div class="sub-calc">'+c.tons+' t × '+fmtUSD(c.subtotal)+'</div>' : '';
+
+    function mkSel(field, opts, placeholder) {
+      let html = '<select onchange="updateRow('+idx+',\''+field+'\',this.value)" style="width:100%">';
+      if (placeholder) html += '<option value="">'+placeholder+'</option>';
+      opts.forEach(function(o) {
+        const val = typeof o === 'object' ? o.value : o;
+        const lbl = typeof o === 'object' ? o.label : o;
+        const sel = String(r[field]) === String(val) ? ' selected' : '';
+        html += '<option value="'+val+'"'+sel+'>'+lbl+'</option>';
+      });
+      html += '</select>';
+      return html;
+    }
+
+    function mkNum(field, ph, w) {
+      return '<input type="number" min="0" step="0.01" placeholder="'+(ph||'0.00')+'" value="'+(r[field]||'')+'" '
+        +'style="width:'+(w||88)+'px" oninput="updateRow('+idx+',\''+field+'\',this.value)">';
+    }
+
+    const arancelOpts = [];
+    for (var i=0;i<=30;i++) arancelOpts.push({value:String(i), label:i+'%'});
+
+    const incOpts = INCOTERMS.map(function(t){ return {value:t.code, label:t.code+' – '+t.name}; });
+    const posOpts = POSICIONES.map(function(p){ return {value:p.code, label:p.code+' — '+p.desc}; });
+
+    const tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td class="w-prod">'+mkSel('producto', PRODUCTS, '— Seleccionar —')+'</td>'+
+      '<td class="w-num">'+mkNum('despAduana','0.00',88)+'</td>'+
+      '<td class="w-dep">'+mkSel('deposito', DEPOSITOS, '— Sede —')+'</td>'+
+      '<td class="w-num">'+mkNum('costoDeposito','0.00',88)+'</td>'+
+      '<td class="w-aran">'+mkSel('arancel', arancelOpts, null)+arancelText+'</td>'+
+      '<td class="w-pue">'+mkSel('puerto', PUERTOS, '— Puerto —')+'</td>'+
+      '<td class="w-num">'+mkNum('costoPuerto','0.00',88)+'</td>'+
+      '<td class="w-num">'+mkNum('fletePlanta','0.00',88)+'</td>'+
+      '<td class="w-num">'+mkNum('fleteInterno','0.00',88)+'</td>'+
+      '<td class="w-num">'+mkNum('flexitanq','0.00',88)+'</td>'+
+      '<td class="w-num">'+mkNum('valorBase','FOB U$S/T',88)+'</td>'+
+      '<td class="w-inc">'+mkSel('incoterm', incOpts, '— Term —')+'</td>'+
+      '<td class="w-pos">'+mkSel('posicion', posOpts, '— Código NCM —')+posDesc+'</td>'+
+      '<td class="w-ton">'+mkNum('tons','Ton',65)+'</td>'+
+      '<td class="w-sub col-sub">'+
+        '<div class="calc-val" style="color:'+(c.subtotal>0?'var(--blue2)':'var(--dim)')+'">'+
+          (c.subtotal>0?fmtUSD(c.subtotal):'—')+'</div>'+breakdown+
+      '</td>'+
+      '<td class="w-tot col-tot">'+
+        '<div class="calc-val" style="color:'+(c.total>0?'var(--green2)':'var(--dim)')+'">'+
+          (c.total>0?fmtUSD(c.total):'—')+'</div>'+tonCalc+
+      '</td>'+
+      '<td style="padding:4px">'+
+        '<button class="btn-del" onclick="removeRow('+idx+')" title="Eliminar">x</button>'+
+      '</td>';
+    tbody.appendChild(tr);
+  });
+
+  // TFOOT
+  if (rows.length > 1) {
+    tfoot.innerHTML =
+      '<tr>'+
+        '<td colspan="14" style="font-family:\'JetBrains Mono\',monospace;font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)">'+
+          'TOTAL GENERAL ('+rows.length+' operaciones)</td>'+
+        '<td class="col-sub" style="font-family:\'JetBrains Mono\',monospace;font-size:.82rem;text-align:right;color:var(--blue2);font-weight:700">'+
+          (totalSub>0?fmtUSD(totalSub/countRows)+' prom.':'—')+'</td>'+
+        '<td class="col-tot" style="font-family:\'JetBrains Mono\',monospace;font-size:.88rem;text-align:right;color:var(--green2);font-weight:700">'+
+          (totalTot>0?fmtUSD(totalTot):'—')+'</td>'+
+        '<td></td>'+
+      '</tr>';
+  } else {
+    tfoot.innerHTML = '';
+  }
+
+  // BANNER
+  document.getElementById('b_n').textContent = ciRows.length;
+  document.getElementById('b_sub').textContent = countRows>0 ? ciFmtUSD(totalSub/countRows) : '—';
+  document.getElementById('b_tot').textContent = totalTot>0 ? ciFmtUSD(totalTot) : '—';
+}
+
+function updateRow(idx, field, value) {
+  if (rows[idx]) ciRows[idx][field] = value;
+  ciRender();
+}
+
+function addRow() {
+  ciRows.push(newRow());
+  ciRender();
+}
+
+function ciRemoveRow(idx) {
+  ciRows.splice(idx, 1);
+  if (rows.length === 0) rows.push(newRow());
+  ciRender();
+}
+
+function clearAll() {
+  if (!confirm('¿Borrar todas las operaciones?')) return;
+  ciRows = [newRow()];
+  ciRender();
+}
+
+// ── EXPORT CSV ───────────────────────────────────────────
+function ciExportCSV() {
+  if (!rows.length) return;
+  const headers = [
+    'Producto','Desp. Aduana U$S/T','Depósito Fiscal','Costo Depósito U$S/T',
+    'Arancel %','Arancel U$S/T','Puerto','Costo Puerto U$S/T',
+    'Flete desde Planta U$S/T','Flete Interno U$S/T','Flexitanq U$S/T',
+    'Valor Base U$S/T','Incoterm','Posición Arancelaria','Descripción NCM',
+    'Toneladas','Subtotal U$S/T','Total U$S'
+  ];
+  const lines = rows.map(function(r) {
+    const c = ciCalcRow(r);
+    const pos = POSICIONES.find(function(p){ return p.code === r.posicion; });
+    return [
+      r.producto, r.despAduana, r.deposito, r.costoDeposito,
+      r.arancel+'%', c.arancelUSD.toFixed(2),
+      r.puerto, r.costoPuerto, r.fletePlanta, r.fleteInterno, r.flexitanq,
+      r.valorBase, r.incoterm, r.posicion,
+      pos ? pos.desc : '',
+      r.tons, c.subtotal.toFixed(2), c.total.toFixed(2)
+    ].map(function(v){ return '"'+(v||'').toString().replace(/"/g,'""')+'"'; }).join(',');
+  });
+  const csv = '\uFEFF' + [headers.map(function(h){ return '"'+h+'"'; }).join(','), ...lines].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'comercio-internacional-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+function ciInit(){
+  // Populate producto select
+  const sel = document.getElementById('ci_ci_producto') || document.getElementById('ci_producto');
+  if(sel && sel.options.length <= 1){
+    PRODUCTS.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.ncm; o.textContent = p.name; sel.appendChild(o);
+    });
+  }
+  ciBuildIncotermsHelp();
+  if(ciRows.length === 0){ ciNewRow(); }
+  ciRender();
+}
+
 </script>
 </body>
 </html>
