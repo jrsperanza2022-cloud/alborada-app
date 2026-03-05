@@ -1,9 +1,8 @@
-module.exports = async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  if (req.method === 'OPTIONS') return res.status(200).end();
+// Vercel Serverless Function: /api/precios
+// Fuentes: stooq.com (CBOT) + argentinadatos.com (divisa) + BCR (granos) + expeller.com.ar
+// Sin API key — corre server-side sin restricciones CORS
 
+export default async function handler(req, res) {
   const out = {};
   const errors = [];
 
@@ -16,15 +15,15 @@ module.exports = async function handler(req, res) {
   ];
   for (const { sym, id, factor } of stooqSymbols) {
     try {
-      const r = await fetch('https://stooq.com/q/l/?s=' + sym + '&f=sd2t2ohlcv&h&e=csv', {
+      const r = await fetch(`https://stooq.com/q/l/?s=${sym}&f=sd2t2ohlcv&h&e=csv`, {
         headers: { 'User-Agent': 'Mozilla/5.0' },
         signal: AbortSignal.timeout(8000)
       });
-      if (!r.ok) { errors.push('stooq/' + sym + ' HTTP ' + r.status); continue; }
+      if (!r.ok) { errors.push(`stooq/${sym} HTTP ${r.status}`); continue; }
       const lines = (await r.text()).trim().split('\n');
-      if (lines.length < 2) { errors.push('stooq/' + sym + ' vacio'); continue; }
+      if (lines.length < 2) { errors.push(`stooq/${sym} vacío`); continue; }
       const close = parseFloat(lines[1].split(',')[6]);
-      if (!close || close <= 0) { errors.push('stooq/' + sym + ' sin precio'); continue; }
+      if (!close || close <= 0) { errors.push(`stooq/${sym} sin precio`); continue; }
       if (id === '_zl') {
         const zlTon = close * 2204.62 / 100;
         out.aSC = Math.round(zlTon * 1.00);
@@ -36,165 +35,129 @@ module.exports = async function handler(req, res) {
       } else {
         out[id] = Math.round(close * factor);
       }
-    } catch (e) { errors.push('stooq/' + sym + ': ' + e.message); }
+    } catch (e) { errors.push(`stooq/${sym}: ${e.message}`); }
   }
 
-  // ── 2. Dólar Divisa BNA ────────────────────────────────
-  // Intento A: dolarapi ambito (lista completa Ambito que incluye divisa)
+  // ── 2. Dólar Divisa BNA via argentinadatos.com ─────────
   try {
-    const r = await fetch('https://dolarapi.com/v1/ambito/dolares', {
+    const r = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares', {
       headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
       signal: AbortSignal.timeout(8000)
     });
     if (r.ok) {
       const data = await r.json();
-      const divisa = data.find(function(d) {
-        const c = (d.casa || d.nombre || '').toLowerCase();
-        return c.includes('divis');
-      });
+      const divisa = data.find(d => d.casa && d.casa.toLowerCase().includes('divisa'));
       if (divisa && divisa.venta > 0) {
         out.divisa_sell = divisa.venta;
         out.divisa_buy  = divisa.compra || divisa.venta;
-      } else {
-        errors.push('ambito dolares: casas=' + data.map(function(d){ return d.casa; }).join(','));
-      }
-    } else {
-      errors.push('ambito dolares HTTP ' + r.status);
-    }
-  } catch (e) { errors.push('ambito dolares: ' + e.message); }
+      } else { errors.push('argentinadatos: divisa no encontrada'); }
+    } else { errors.push(`argentinadatos HTTP ${r.status}`); }
+  } catch (e) { errors.push(`argentinadatos: ${e.message}`); }
 
-  // Intento B: scraping directo BNA (server-side, sin CORS)
+  // Fallback divisa: BNA scraping
   if (!out.divisa_sell) {
     try {
       const r = await fetch('https://www.bna.com.ar/Personas', {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'es-AR,es;q=0.9',
-          'Cache-Control': 'no-cache',
-        },
+        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' },
         signal: AbortSignal.timeout(10000)
       });
       if (r.ok) {
         const html = await r.text();
-        // BNA tiene una tabla con filas: Dólar U.S.A. | compra | venta
-        // La divisa aparece como segunda fila de la tabla de cotizaciones
-        // Buscamos todos los pares de números que parecen TC (4 dígitos)
-        const allMatches = html.match(/\b1[.,]\d{3}(?:[.,]\d{2})?\b/g) || [];
-        // Buscar específicamente cerca de "divisa"
-        const idx = html.toLowerCase().indexOf('divisa');
-        if (idx > -1) {
-          const chunk = html.slice(Math.max(0,idx-200), idx + 500);
-          const nums = chunk.match(/\d{3,4}[.,]\d{2}/g);
-          if (nums && nums.length >= 2) {
-            const buy  = parseFloat(nums[0].replace(/\./g,'').replace(',','.'));
-            const sell = parseFloat(nums[1].replace(/\./g,'').replace(',','.'));
-            if (sell > 800 && sell < 9999) {
-              out.divisa_sell = sell;
-              out.divisa_buy  = buy;
-            }
-          }
-        }
-        if (!out.divisa_sell) {
-          // Estrategia: tomar el oficial + 0.5% (divisa es casi igual al oficial en BNA)
-          // Esto es un fallback aproximado
-          errors.push('BNA: divisa no encontrada en HTML, usando aproximacion');
-          if (out.sojaI) { // Solo si tenemos datos
-            // No poner nada mejor que mostrar vacio
-          }
-        }
-      } else {
-        errors.push('BNA HTTP ' + r.status);
-      }
-    } catch (e) { errors.push('BNA: ' + e.message); }
-  }
-
-  // Intento C: bluelytics (tiene divisa como campo separado)
-  if (!out.divisa_sell) {
-    try {
-      const r = await fetch('https://api.bluelytics.com.ar/v2/latest', {
-        headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
-        signal: AbortSignal.timeout(8000)
-      });
-      if (r.ok) {
-        const d = await r.json();
-        // bluelytics tiene: oficial, blue, oficial_euro, blue_euro
-        // No tiene divisa separada, pero el "oficial" de BNA es la base
-        // La divisa BNA suele ser = oficial BNA venta
-        if (d.oficial && d.oficial.value_sell > 0) {
-          // Usar oficial como proxy de divisa si no hay mejor fuente
-          out.divisa_sell = d.oficial.value_sell;
-          out.divisa_buy  = d.oficial.value_buy;
-          errors.push('divisa: usando oficial BNA como aproximacion');
+        const m = html.match(/divisa[\s\S]{0,3000}?(\d{3,4}[,\.]\d{2})[\s\S]{0,200}?(\d{3,4}[,\.]\d{2})/i);
+        if (m) {
+          const buy = parseFloat(m[1].replace(',', '.'));
+          const sell = parseFloat(m[2].replace(',', '.'));
+          if (sell > 500 && sell < 5000) { out.divisa_sell = sell; out.divisa_buy = buy; }
         }
       }
-    } catch (e) { errors.push('bluelytics: ' + e.message); }
+    } catch (e) { errors.push(`BNA fallback: ${e.message}`); }
   }
 
-  // ── 3. Expeller — fetch directo, parsing mejorado ──────
+  // ── 3. AFA SCL — afascl.coop/afadiario/mercados-en-linea ─
+  // Fuente: Asociación de Federadas Argentinas (AFA)
+  // Provee: pizarra granos $/Ton, CBOT aceite USD/Ton (delay 20min),
+  //         futuros MatbaRofex Soja/Maíz/Trigo Rosario en USD
   try {
-    const r = await fetch('http://www.expeller.com.ar/pizarra.asp', {
+    const r = await fetch('https://www.afascl.coop/afadiario/mercados-en-linea', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html,application/xhtml+xml',
         'Accept-Language': 'es-AR,es;q=0.9',
+        'Cache-Control': 'no-cache',
       },
-      signal: AbortSignal.timeout(12000)
-    });
-    if (r.ok) {
-      // El sitio devuelve Windows-1252 (latin1), no UTF-8
-      const buf = await r.arrayBuffer();
-      const html = new TextDecoder('windows-1252').decode(buf);
-
-      // Extraer TODOS los números de 5-7 cifras del HTML
-      const allNums = [];
-      const re = /\b(\d{5,7})\b/g;
-      let m;
-      while ((m = re.exec(html)) !== null) {
-        const v = parseInt(m[1], 10);
-        if (v >= 10000 && v <= 9999999) allNums.push({ val: v, idx: m.index });
-      }
-
-      // Buscar el número más cercano después de "soja"
-      const findNearest = function(keyword) {
-        const lower = html.toLowerCase();
-        let searchFrom = 0;
-        while (true) {
-          const idx = lower.indexOf(keyword, searchFrom);
-          if (idx === -1) break;
-          // Buscar el primer número válido en los siguientes 500 chars
-          for (var i = 0; i < allNums.length; i++) {
-            if (allNums[i].idx >= idx && allNums[i].idx <= idx + 500) {
-              return allNums[i].val;
-            }
-          }
-          searchFrom = idx + 1;
-        }
-        return null;
-      };
-
-      const expSoja    = findNearest('soja');
-      const expGirasol = findNearest('girasol');
-
-      if (expSoja)    out.expSoja    = expSoja;
-      if (expGirasol) out.expGirasol = expGirasol;
-      if (!expSoja && !expGirasol) {
-        errors.push('expeller: html=' + html.length + 'chars, numeros=' + allNums.length + ', snippet=' + html.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').slice(0,300));
-      }
-    } else {
-      errors.push('expeller HTTP ' + r.status);
-    }
-  } catch (e) { errors.push('expeller: ' + e.message); }
-
-  // ── 4. Granos Rosario via BCR ──────────────────────────
-  try {
-    const r = await fetch('https://www.bcr.com.ar/es/mercados/cotizaciones/granos', {
-      headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/html' },
       signal: AbortSignal.timeout(10000)
     });
     if (r.ok) {
       const html = await r.text();
-      const extract = function(pattern) {
+
+      // ── Pizarra granos en $/Ton ──────────────────────────
+      // Estructura: "Soja
+San Martín
+#### $ 462000"
+      const parsePizarra = (label) => {
+        const re = new RegExp(label + '[\s\S]{0,120}?\$\s*([\d\.]+)', 'i');
+        const m = html.match(re);
+        if (!m) return null;
+        const v = parseFloat(m[1].replace(/\./g, ''));
+        return (v > 10000 && v < 9999999) ? v : null;
+      };
+      const afaSoja    = parsePizarra('Soja');
+      const afaMaiz    = parsePizarra('Maíz');
+      const afaGirasol = parsePizarra('Girasol');
+      const afaTrigo   = parsePizarra('Trigo');
+      const afaSorgo   = parsePizarra('Sorgo');
+      if (afaSoja)    out.pizSoja    = afaSoja;
+      if (afaMaiz)    out.pizMaiz    = afaMaiz;
+      if (afaGirasol) out.pizGirasol = afaGirasol;
+      if (afaTrigo)   out.pizTrigo   = afaTrigo;
+      if (afaSorgo)   out.pizSorgo   = afaSorgo;
+
+      // ── CBOT Aceite en USD/Ton (delay 20min) ─────────────
+      // Tabla CMA-CBOT: fila "Aceite | Mar 26 | diff | precio"
+      // precio ya viene en USD/Ton métrica
+      const aceiteRe = /Aceite[\s\S]{0,60}?([\d]+\.[\d]+)/i;
+      const aceiteM  = html.match(aceiteRe);
+      if (aceiteM) {
+        const aceiteUSD = parseFloat(aceiteM[1]);
+        if (aceiteUSD > 500 && aceiteUSD < 5000) {
+          // Aceite soja crudo CBOT en USD/Ton — usarlo directo
+          out.aSC = Math.round(aceiteUSD * 1.00);  // crudo
+          out.aSR = Math.round(aceiteUSD * 1.04);  // refinado soja
+          out.aMC = Math.round(aceiteUSD * 0.88);  // crudo maíz
+          out.aMR = Math.round(aceiteUSD * 0.92);  // refinado maíz
+          out.aGC = Math.round(aceiteUSD * 1.15);  // crudo girasol
+          out.aGR = Math.round(aceiteUSD * 1.20);  // refinado girasol
+        }
+      }
+
+      // ── MatbaRofex: soja disponible más cercano en USD/Ton ─
+      // Fila más líquida: SOJ.ROS/MAY26 o similar con ajuste > 0
+      const rofexSojaRe = /SOJ\.ROS\/\w+[\s|]+[\d.]+[\s|]+[\d.]*[\s|]+[\d.]*[\s|]+([\d.]+)/g;
+      let rofexBestSoja = null;
+      let rm;
+      while ((rm = rofexSojaRe.exec(html)) !== null) {
+        const ajuste = parseFloat(rm[1]);
+        if (ajuste > 200 && ajuste < 1000) { rofexBestSoja = ajuste; break; }
+      }
+      if (rofexBestSoja) out.rofexSoja = rofexBestSoja;
+
+      if (!afaSoja && !aceiteM) errors.push('AFA: sin datos parseables');
+    } else { errors.push(`AFA HTTP ${r.status}`); }
+  } catch (e) { errors.push(`AFA: ${e.message}`); }
+
+  // ── 4. Granos Rosario via BCR ──────────────────────────
+  try {
+    const r = await fetch('https://www.bcr.com.ar/es/mercados/cotizaciones/granos', {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'text/html',
+        'Accept-Language': 'es-AR,es;q=0.9',
+      },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (r.ok) {
+      const html = await r.text();
+      const extract = (pattern) => {
         const re = new RegExp(pattern + '[\\s\\S]{0,400}?>(\\d{2,4}(?:[,.]\\d{1,2})?)<', 'i');
         const m = html.match(re);
         if (!m) return null;
@@ -202,21 +165,21 @@ module.exports = async function handler(req, res) {
         return (v > 50 && v < 2000) ? v : null;
       };
       const s = extract('Soja');
-      const m2 = extract('Ma');
+      const m = extract('Ma[íi]z');
       const g = extract('Girasol');
       if (s) out.gS = s;
-      if (m2) out.gM = m2;
+      if (m) out.gM = m;
       if (g) out.gG = g;
-    } else { errors.push('BCR HTTP ' + r.status); }
-  } catch (e) { errors.push('BCR: ' + e.message); }
+    } else { errors.push(`BCR HTTP ${r.status}`); }
+  } catch (e) { errors.push(`BCR: ${e.message}`); }
 
-  // ── 5. Fallback granos desde CBOT ─────────────────────
+  // ── 5. Fallback granos Rosario desde CBOT ─────────────
   if (!out.gS && out.sojaI)  out.gS = Math.round(out.sojaI  * 0.88);
   if (!out.gM && out.maizI)  out.gM = Math.round(out.maizI  * 0.90);
   if (!out.gG && out.trigoI) out.gG = Math.round(out.trigoI * 0.92);
 
   if (Object.keys(out).length === 0) {
-    return res.status(502).json({ error: 'Sin datos', errors: errors });
+    return res.status(502).json({ error: 'Sin datos', errors });
   }
 
   return res.status(200).json({
@@ -224,4 +187,4 @@ module.exports = async function handler(req, res) {
     ts: new Date().toISOString(),
     errors: errors.length ? errors : undefined
   });
-};
+}
