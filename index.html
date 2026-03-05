@@ -1913,9 +1913,12 @@ function exportCSV(){
 //  TABS
 // ══════════════════════════════════════════════════════════
 function showTab(id){
-  ['mercado','calc','dash','hist','conversor','info'].forEach((t,i)=>{
-    document.getElementById('tab-'+t).classList.toggle('active',t===id);
-    document.querySelectorAll('.tab')[i].classList.toggle('active',t===id);
+  const tabs=['mercado','calc','dash','hist','conversor','info','comercio'];
+  const btns=document.querySelectorAll('.tab');
+  tabs.forEach((t,i)=>{
+    const el=document.getElementById('tab-'+t);
+    if(el) el.classList.toggle('active',t===id);
+    if(btns[i]) btns[i].classList.toggle('active',t===id);
   });
   if(id==='dash')renderDash();
   if(id==='hist')renderHist();
