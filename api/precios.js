@@ -54,22 +54,22 @@ export default async function handler(req, res) {
     } else { errors.push(`argentinadatos HTTP ${r.status}`); }
   } catch (e) { errors.push(`argentinadatos: ${e.message}`); }
 
-  // Fallback A: dolarapi.com — incluye divisa como casa separada
+  // Fallback A: dolarapi.com/v1/ambito — incluye divisa BNA (transferencias)
   if (!out.divisa_sell) {
     try {
-      const r = await fetch('https://dolarapi.com/v1/dolares', {
+      const r = await fetch('https://dolarapi.com/v1/ambito/dolares', {
         headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' },
         signal: AbortSignal.timeout(8000)
       });
       if (r.ok) {
         const data = await r.json();
-        const divisa = data.find(d => (d.casa || '').toLowerCase().includes('divis'));
+        const divisa = data.find(d => (d.casa || d.nombre || '').toLowerCase().includes('divis'));
         if (divisa && divisa.venta > 0) {
           out.divisa_sell = divisa.venta;
           out.divisa_buy  = divisa.compra || divisa.venta;
-        } else { errors.push('dolarapi: divisa no encontrada, casas=' + data.map(d => d.casa).join(',')); }
-      } else { errors.push(`dolarapi HTTP ${r.status}`); }
-    } catch (e) { errors.push(`dolarapi divisa: ${e.message}`); }
+        } else { errors.push('dolarapi ambito: casas=' + data.map(d => d.casa || d.nombre).join(',')); }
+      } else { errors.push(`dolarapi ambito HTTP ${r.status}`); }
+    } catch (e) { errors.push(`dolarapi ambito: ${e.message}`); }
   }
 
   // Fallback B: BNA scraping directo
