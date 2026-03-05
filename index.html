@@ -926,8 +926,8 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
   <div class="header-right">
     <button class="btn btn-s" onclick="ciToggleHelp()">Incoterms</button>
     <button class="btn btn-s" onclick="ciExportCSV()">Exportar CSV</button>
-    <button class="btn btn-d" onclick="clearAll()">Borrar todo</button>
-    <button class="btn btn-p" onclick="addRow()">+ Nueva fila</button>
+    <button class="btn btn-d" onclick="ciRows=[];ciRender()">Borrar todo</button>
+    <button class="btn btn-p" onclick="ciNewRow()">+ Nueva fila</button>
   </div>
 </header>
 
@@ -988,7 +988,7 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
   </div>
 </div>
 
-<button class="add-row-btn" onclick="addRow()">+ Agregar nueva operación</button>
+<button class="add-row-btn" onclick="ciNewRow()">+ Agregar nueva operación</button>
 
 <!-- LEGEND -->
 <div class="legend">
