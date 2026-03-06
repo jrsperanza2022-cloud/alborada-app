@@ -386,6 +386,60 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 
 #tab-comercio footer {text-align:center;color:var(--dim);font-size:.65rem;font-family:'JetBrains Mono',monospace;padding:10px 0;}
 
+
+<style>
+/* ═══ TAB OPERACIONES ═══════════════════════════════════════ */
+#tab-tx { font-family: 'Nunito', sans-serif; }
+#tab-tx .tx-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:16px; }
+#tab-tx .tx-title  { font-family:'Syne',sans-serif; font-size:1.3rem; font-weight:800; color:var(--text); }
+#tab-tx .tx-title span { color:var(--gold); }
+#tab-tx .tx-stats  { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:8px; margin-bottom:16px; }
+#tab-tx .tx-sc     { background:var(--s2); border:1px solid var(--border); border-radius:10px; padding:10px 14px; }
+#tab-tx .tx-scl    { font-family:'JetBrains Mono',monospace; font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:4px; }
+#tab-tx .tx-scv    { font-family:'JetBrains Mono',monospace; font-size:1.05rem; font-weight:800; }
+#tab-tx .tx-filters { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+#tab-tx .tx-filters input, #tab-tx .tx-filters select {
+  background:var(--s2); border:1px solid var(--border); color:var(--text);
+  border-radius:7px; padding:6px 10px; font-size:.78rem; font-family:'Nunito',sans-serif;
+}
+#tab-tx .tx-table-wrap { background:var(--s2); border:1px solid var(--border); border-radius:12px; overflow:hidden; }
+#tab-tx .tx-scroll     { overflow-x:auto; }
+#tab-tx table          { width:100%; border-collapse:collapse; font-size:.78rem; }
+#tab-tx thead th       { background:var(--s3); padding:8px 10px; text-align:left; font-family:'JetBrains Mono',monospace; font-size:.6rem; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); white-space:nowrap; }
+#tab-tx tbody tr       { border-top:1px solid var(--border); transition:background .15s; }
+#tab-tx tbody tr:hover { background:var(--s3); }
+#tab-tx td             { padding:8px 10px; vertical-align:middle; white-space:nowrap; }
+#tab-tx .tx-gan        { color:var(--green2); font-weight:700; }
+#tab-tx .tx-per        { color:var(--red2);   font-weight:700; }
+#tab-tx .tx-neu        { color:var(--muted);  }
+#tab-tx .tx-badge      { display:inline-block; border-radius:5px; padding:2px 8px; font-size:.65rem; font-weight:700; }
+#tab-tx .tx-b-gan      { background:rgba(46,184,114,.12); color:var(--green2); border:1px solid rgba(46,184,114,.25); }
+#tab-tx .tx-b-per      { background:rgba(217,79,79,.12);  color:var(--red2);   border:1px solid rgba(217,79,79,.25); }
+#tab-tx .tx-b-pen      { background:rgba(200,168,75,.1);  color:var(--gold);   border:1px solid rgba(200,168,75,.2); }
+/* Modal nueva operacion */
+#txModal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:9999; overflow-y:auto; padding:20px; }
+#txModal.open { display:flex; align-items:flex-start; justify-content:center; }
+#txModalBox { background:var(--s1); border:1px solid var(--border2); border-radius:14px; width:100%; max-width:700px; padding:22px 24px; margin:auto; }
+#txModal .mhdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; }
+#txModal .mtitle { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; }
+#txModal .mclose { background:none; border:none; color:var(--muted); font-size:1.2rem; cursor:pointer; }
+#txModal .mclose:hover { color:var(--text); }
+#txModal .fg2  { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+#txModal .fg3  { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+#txModal .fg1  { display:grid; grid-template-columns:1fr; gap:10px; }
+#txModal .msec { font-family:'JetBrains Mono',monospace; font-size:.6rem; letter-spacing:.12em; text-transform:uppercase; color:var(--muted); margin:14px 0 8px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+#txModal label { font-size:.72rem; color:var(--muted); display:block; margin-bottom:3px; }
+#txModal input, #txModal select, #txModal textarea {
+  width:100%; background:var(--s2); border:1px solid var(--border); color:var(--text);
+  border-radius:7px; padding:7px 10px; font-family:'Nunito',sans-serif; font-size:.82rem;
+  box-sizing:border-box;
+}
+#txModal textarea { resize:vertical; min-height:60px; }
+#txModal .mfooter { display:flex; gap:8px; justify-content:flex-end; margin-top:18px; }
+#txModal .mbtn-p { background:var(--gold); color:var(--bg); border:none; border-radius:8px; padding:9px 20px; font-weight:700; font-size:.82rem; cursor:pointer; font-family:'Nunito',sans-serif; }
+#txModal .mbtn-p:hover { background:var(--gold2); }
+#txModal .mbtn-s { background:var(--s2); border:1px solid var(--border); color:var(--text); border-radius:8px; padding:9px 16px; font-weight:700; font-size:.82rem; cursor:pointer; font-family:'Nunito',sans-serif; }
+</style>
 </style>
 </head>
 <body>
@@ -417,6 +471,7 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
   <button class="tab" onclick="showTab('conversor')">💱 Conversor</button>
   <button class="tab" onclick="showTab('info')">📚 Info Comercial</button>
   <button class="tab" onclick="showTab('comercio');ciInit()">🌐 Comercio Intl.</button>
+  <button class="tab" onclick="showTab('tx');txInit()">📋 Operaciones</button>
 </div>
 
 <!-- ══════════ MERCADO ══════════ -->
@@ -1007,6 +1062,159 @@ header{display:flex;align-items:center;justify-content:space-between;flex-wrap:w
 
 
 </div>
+
+<!-- ══════════ OPERACIONES ══════════ -->
+<div id="tab-tx" class="tab-content">
+  <div class="section">
+
+    <div class="tx-header">
+      <div>
+        <div class="tx-title">📋 Registro de <span>Operaciones</span></div>
+        <div style="font-size:.72rem;color:var(--muted);margin-top:3px">Base de datos de transacciones realizadas</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-teal" onclick="txExportCSV()">⬇ Exportar CSV</button>
+        <button class="btn btn-g" onclick="txOpenModal(null)">＋ Nueva Operación</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="tx-stats" id="txStats"></div>
+
+    <!-- Filtros -->
+    <div class="tx-filters">
+      <input id="txFltTxt"   type="text"   placeholder="🔍 Buscar orden, proveedor, comprador..." oninput="txRender()" style="min-width:220px">
+      <select id="txFltProd" onchange="txRender()">
+        <option value="">Todos los productos</option>
+        <option>Aceite Soja Crudo</option><option>Aceite Soja Refinado</option>
+        <option>Aceite Maíz Crudo</option><option>Aceite Maíz Refinado</option>
+        <option>Aceite Girasol Crudo</option><option>Aceite Girasol Refinado</option>
+        <option>Soja</option><option>Maíz</option><option>Girasol</option><option>Trigo</option>
+      </select>
+      <select id="txFltRes" onchange="txRender()">
+        <option value="">Todos</option>
+        <option value="g">Ganancia</option>
+        <option value="p">Pérdida</option>
+        <option value="pen">Pendiente</option>
+      </select>
+      <input id="txFltDesde" type="date" onchange="txRender()" title="Desde">
+      <input id="txFltHasta" type="date" onchange="txRender()" title="Hasta">
+    </div>
+
+    <!-- Tabla -->
+    <div class="tx-table-wrap">
+      <div class="tx-scroll">
+        <table>
+          <thead><tr>
+            <th>Orden</th>
+            <th>Fecha / Hora</th>
+            <th>Producto</th>
+            <th>Proveedor</th>
+            <th>Comprador</th>
+            <th>Ton</th>
+            <th>Compra U$S/T</th>
+            <th>TC Compra</th>
+            <th>Venta U$S/T</th>
+            <th>TC Venta</th>
+            <th>Result. $/T</th>
+            <th>Result. U$S/T</th>
+            <th>Total $</th>
+            <th>Total U$S</th>
+            <th style="text-align:center">%</th>
+            <th style="text-align:center">Estado</th>
+            <th></th>
+          </tr></thead>
+          <tbody id="txTbody"><tr><td colspan="17" style="text-align:center;padding:24px;color:var(--muted)">Sin operaciones. Usá <strong>+ Nueva Operación</strong> para registrar.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════ MODAL NUEVA OPERACIÓN ══════════ -->
+<div id="txModal">
+  <div id="txModalBox">
+    <div class="mhdr">
+      <div class="mtitle" id="txModalTitle">Nueva Operación</div>
+      <button class="mclose" onclick="txCloseModal()">✕</button>
+    </div>
+
+    <div class="msec">📌 Identificación</div>
+    <div class="fg3">
+      <div><label>N° de Orden</label><input id="tx_orden" type="text" placeholder="Ej: OP-2026-001"></div>
+      <div><label>Fecha</label><input id="tx_fecha" type="date"></div>
+      <div><label>Hora</label><input id="tx_hora" type="time"></div>
+    </div>
+    <div class="fg2" style="margin-top:10px">
+      <div><label>Producto</label>
+        <select id="tx_prod">
+          <option>Aceite Soja Crudo</option><option>Aceite Soja Refinado</option>
+          <option>Aceite Maíz Crudo</option><option>Aceite Maíz Refinado</option>
+          <option>Aceite Girasol Crudo</option><option>Aceite Girasol Refinado</option>
+          <option>Soja</option><option>Maíz</option><option>Girasol</option><option>Trigo</option>
+        </select>
+      </div>
+      <div><label>Toneladas</label><input id="tx_ton" type="number" placeholder="Ej: 500" min="0" step="0.01"></div>
+    </div>
+    <div class="fg2" style="margin-top:10px">
+      <div><label>Proveedor</label><input id="tx_prov" type="text" placeholder="Nombre del proveedor"></div>
+      <div><label>Comprador / Cliente</label><input id="tx_comp" type="text" placeholder="Nombre del comprador"></div>
+    </div>
+
+    <div class="msec">💰 Compra</div>
+    <div class="fg3">
+      <div><label>Precio Compra (U$S/Ton)</label><input id="tx_cUSD" type="number" placeholder="Ej: 1000" min="0" step="0.01" oninput="txCalcPreview()"></div>
+      <div><label>TC Compra</label>
+        <select id="tx_tcC" onchange="txCalcPreview()">
+          <option value="blue">Dólar Blue</option>
+          <option value="mayorista">Mayorista BCRA</option>
+          <option value="oficial">Oficial BNA</option>
+          <option value="divisa">Divisa BNA</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+      <div><label>Valor TC Compra ($/U$S)</label><input id="tx_tcCVal" type="number" placeholder="Auto" min="0" step="0.01" oninput="txCalcPreview()"></div>
+    </div>
+    <div class="fg3" style="margin-top:10px">
+      <div><label>Flete (U$S/Ton)</label><input id="tx_flete" type="number" placeholder="0" min="0" step="0.01" oninput="txCalcPreview()"></div>
+      <div><label>Servicio/Fasón (U$S/Ton)</label><input id="tx_fason" type="number" placeholder="0" min="0" step="0.01" oninput="txCalcPreview()"></div>
+      <div><label>Comisión + Gastos (U$S/Ton)</label><input id="tx_otros" type="number" placeholder="0" min="0" step="0.01" oninput="txCalcPreview()"></div>
+    </div>
+
+    <div class="msec">📦 Venta</div>
+    <div class="fg3">
+      <div><label>Precio Venta (U$S/Ton)</label><input id="tx_vUSD" type="number" placeholder="Ej: 1050" min="0" step="0.01" oninput="txCalcPreview()"></div>
+      <div><label>TC Venta</label>
+        <select id="tx_tcV" onchange="txCalcPreview()">
+          <option value="mayorista">Mayorista BCRA</option>
+          <option value="blue">Dólar Blue</option>
+          <option value="oficial">Oficial BNA</option>
+          <option value="divisa">Divisa BNA</option>
+          <option value="manual">Manual</option>
+        </select>
+      </div>
+      <div><label>Valor TC Venta ($/U$S)</label><input id="tx_tcVVal" type="number" placeholder="Auto" min="0" step="0.01" oninput="txCalcPreview()"></div>
+    </div>
+
+    <!-- Preview resultado -->
+    <div id="txPreview" style="margin-top:14px;display:none;background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:12px 16px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Vista previa del resultado</div>
+      <div style="display:flex;gap:20px;flex-wrap:wrap" id="txPreviewContent"></div>
+    </div>
+
+    <div class="msec">📝 Notas</div>
+    <div class="fg1">
+      <div><label>Observaciones (opcional)</label><textarea id="tx_notas" placeholder="Condiciones del contrato, referencias, etc."></textarea></div>
+    </div>
+
+    <div class="mfooter">
+      <button class="mbtn-s" onclick="txCloseModal()">Cancelar</button>
+      <button class="mbtn-p" onclick="txSave()">💾 Guardar Operación</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- /wrap -->
 <script>
 // ══════════════════════════════════════════════════════════
@@ -1997,7 +2205,7 @@ function exportCSV(){
 //  TABS
 // ══════════════════════════════════════════════════════════
 function showTab(id){
-  const tabs=['mercado','calc','dash','hist','conversor','info','comercio'];
+  const tabs=['mercado','calc','dash','hist','conversor','info','comercio','tx'];
   const btns=document.querySelectorAll('.tab');
   tabs.forEach((t,i)=>{
     const el=document.getElementById('tab-'+t);
@@ -2427,6 +2635,334 @@ function ciInit(){
   if(ciRows.length === 0){ ciNewRow(); }
   ciRender();
 }
+
+
+// ══════════════════════════════════════════════════════════
+//  REGISTRO DE OPERACIONES (TX)
+// ══════════════════════════════════════════════════════════
+const TX_KEY = 'alb6_tx';
+let txRows = [];
+let txEditId = null;
+
+function txLoad(){ try{ const v=localStorage.getItem(TX_KEY); txRows=v?JSON.parse(v):[]; }catch(e){ txRows=[]; } }
+function txSaveLS(){ try{ localStorage.setItem(TX_KEY, JSON.stringify(txRows)); }catch(e){} }
+function txGenId(){ return 'tx_'+Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+
+function txGetTC(key){
+  if(key==='blue')     return apiD.blue||0;
+  if(key==='mayorista')return apiD.mayorista||0;
+  if(key==='oficial')  return apiD.oficial||0;
+  if(key==='divisa')   return apiD.divisa||0;
+  return 0;
+}
+function txTCLabel(key){
+  if(key==='blue')     return 'Blue';
+  if(key==='mayorista')return 'Mayorista';
+  if(key==='oficial')  return 'Oficial';
+  if(key==='divisa')   return 'Divisa';
+  if(key==='manual')   return 'Manual';
+  return key||'—';
+}
+function txFmtP(v){ return v!=null?'$ '+Math.round(v).toLocaleString('es-AR'):'—'; }
+function txFmtU(v){ return v!=null?'U$S '+Math.round(v).toLocaleString('es-AR'):'—'; }
+function txFmtPct(v){ if(v==null)return '—'; const s=v>=0?'+':''; return s+v.toFixed(1)+'%'; }
+
+function txCalcRow(r){
+  const tcC = r.tcCVal || 0;
+  const tcV = r.tcVVal || 0;
+  if(!tcC || !tcV || !r.compraUSD) return null;
+  const costoUSD = (r.compraUSD||0) + (r.fleteUSD||0) + (r.fasonUSD||0) + (r.otrosUSD||0);
+  const costoPesos = costoUSD * tcC;
+  if(!r.ventaUSD) return { costoUSD, costoPesos, ventaPesos:null, difPesos:null, difUSD:null, pct:null };
+  const ventaPesos = r.ventaUSD * tcV;
+  const difPesos = ventaPesos - costoPesos;
+  const difUSD   = difPesos / tcV;
+  const pct      = costoPesos > 0 ? (difPesos / costoPesos) * 100 : null;
+  return { costoUSD, costoPesos, ventaPesos, difPesos, difUSD, pct };
+}
+
+function txInit(){
+  txLoad();
+  txRender();
+}
+
+function txRender(){
+  txLoad();
+  const fTxt  = (document.getElementById('txFltTxt')?.value||'').toLowerCase();
+  const fProd = document.getElementById('txFltProd')?.value||'';
+  const fRes  = document.getElementById('txFltRes')?.value||'';
+  const fDesde= document.getElementById('txFltDesde')?.value||'';
+  const fHasta= document.getElementById('txFltHasta')?.value||'';
+
+  let filtered = txRows.filter(r=>{
+    if(fProd && r.producto !== fProd) return false;
+    if(fTxt && ![r.orden,r.proveedor,r.comprador,r.producto,r.notas].join(' ').toLowerCase().includes(fTxt)) return false;
+    if(fDesde && r.fecha < fDesde) return false;
+    if(fHasta && r.fecha > fHasta) return false;
+    const c = txCalcRow(r);
+    if(fRes==='g'   && (!c || c.pct==null || c.pct<0))  return false;
+    if(fRes==='p'   && (!c || c.pct==null || c.pct>=0)) return false;
+    if(fRes==='pen' && r.ventaUSD) return false;
+    return true;
+  });
+
+  // Stats
+  const totGanP = filtered.reduce((a,r)=>{ const c=txCalcRow(r); return a+((c&&c.difPesos&&r.ton)?c.difPesos*r.ton:0); },0);
+  const totGanU = filtered.reduce((a,r)=>{ const c=txCalcRow(r); return a+((c&&c.difUSD&&r.ton)?c.difUSD*r.ton:0); },0);
+  const cerradas = filtered.filter(r=>r.ventaUSD).length;
+  const totTon   = filtered.reduce((a,r)=>a+(r.ton||0),0);
+  const sEl = document.getElementById('txStats');
+  if(sEl) sEl.innerHTML = `
+    <div class="tx-sc"><div class="tx-scl">Total ops</div><div class="tx-scv" style="color:var(--gold2)">${txRows.length}</div></div>
+    <div class="tx-sc"><div class="tx-scl">Mostrando</div><div class="tx-scv">${filtered.length}</div></div>
+    <div class="tx-sc"><div class="tx-scl">Cerradas</div><div class="tx-scv">${cerradas}</div></div>
+    <div class="tx-sc"><div class="tx-scl">Toneladas</div><div class="tx-scv">${totTon.toLocaleString('es-AR')}</div></div>
+    <div class="tx-sc"><div class="tx-scl">Gan. total $</div><div class="tx-scv ${totGanP>=0?'tx-gan':'tx-per'}">${txFmtP(totGanP)}</div></div>
+    <div class="tx-sc"><div class="tx-scl">Gan. total U$S</div><div class="tx-scv ${totGanU>=0?'tx-gan':'tx-per'}">${txFmtU(totGanU)}</div></div>
+  `;
+
+  // Table
+  const tb = document.getElementById('txTbody');
+  if(!tb) return;
+  if(!filtered.length){
+    tb.innerHTML='<tr><td colspan="17" style="text-align:center;padding:24px;color:var(--muted)">Sin resultados para los filtros aplicados.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = filtered.map(r=>{
+    const c   = txCalcRow(r);
+    const pct = c?.pct;
+    const cls = pct==null ? 'tx-neu' : pct>=0 ? 'tx-gan' : 'tx-per';
+    const badge = !r.ventaUSD
+      ? '<span class="tx-badge tx-b-pen">Pendiente</span>'
+      : pct>=0
+        ? '<span class="tx-badge tx-b-gan">✓ Ganancia</span>'
+        : '<span class="tx-badge tx-b-per">✗ Pérdida</span>';
+
+    const difPT  = c?.difPesos  != null ? txFmtP(c.difPesos)  : '—';
+    const difUT  = c?.difUSD    != null ? txFmtU(c.difUSD)    : '—';
+    const totP   = (c?.difPesos != null && r.ton) ? txFmtP(c.difPesos * r.ton) : '—';
+    const totU   = (c?.difUSD   != null && r.ton) ? txFmtU(c.difUSD   * r.ton) : '—';
+
+    return `<tr>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--gold2);font-weight:700">${r.orden||'—'}</td>
+      <td style="font-family:'JetBrains Mono',monospace;font-size:.72rem">${r.fecha||'—'}<br><span style="color:var(--muted);font-size:.65rem">${r.hora||''}</span></td>
+      <td style="color:var(--text)">${r.producto||'—'}</td>
+      <td>${r.proveedor||'—'}</td>
+      <td>${r.comprador||'—'}</td>
+      <td style="text-align:right">${r.ton?r.ton.toLocaleString('es-AR'):'—'}</td>
+      <td style="text-align:right;font-family:'JetBrains Mono',monospace">${r.compraUSD?'U$S '+r.compraUSD.toLocaleString('es-AR'):'—'}</td>
+      <td style="text-align:center"><span class="chip c-p" style="font-size:.62rem">${txTCLabel(r.tcC)}</span><br><span style="font-size:.62rem;color:var(--muted)">$${Math.round(r.tcCVal||0).toLocaleString('es-AR')}</span></td>
+      <td style="text-align:right;font-family:'JetBrains Mono',monospace">${r.ventaUSD?'U$S '+r.ventaUSD.toLocaleString('es-AR'):'<span style="opacity:.3">—</span>'}</td>
+      <td style="text-align:center"><span class="chip c-b" style="font-size:.62rem">${txTCLabel(r.tcV)}</span><br><span style="font-size:.62rem;color:var(--muted)">$${Math.round(r.tcVVal||0).toLocaleString('es-AR')}</span></td>
+      <td class="${cls}" style="text-align:right;font-family:'JetBrains Mono',monospace">${difPT}</td>
+      <td class="${cls}" style="text-align:right;font-family:'JetBrains Mono',monospace">${difUT}</td>
+      <td class="${cls}" style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:800">${totP}</td>
+      <td class="${cls}" style="text-align:right;font-family:'JetBrains Mono',monospace;font-weight:800">${totU}</td>
+      <td class="${cls}" style="text-align:center;font-weight:800;font-size:.85rem">${txFmtPct(pct)}</td>
+      <td style="text-align:center">${badge}</td>
+      <td style="text-align:center;white-space:nowrap">
+        <button onclick="txOpenModal('${r.id}')" title="Editar" style="background:rgba(61,143,224,.1);border:1px solid rgba(61,143,224,.2);color:var(--blue2);border-radius:5px;padding:3px 7px;font-size:.65rem;cursor:pointer;margin-right:3px">✏</button>
+        <button onclick="txDelete('${r.id}')" title="Eliminar" style="background:rgba(217,79,79,.08);border:1px solid rgba(217,79,79,.2);color:var(--red2);border-radius:5px;padding:3px 7px;font-size:.65rem;cursor:pointer">✕</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function txCalcPreview(){
+  const cUSD  = parseFloat(document.getElementById('tx_cUSD')?.value)||0;
+  const vUSD  = parseFloat(document.getElementById('tx_vUSD')?.value)||0;
+  const tcCK  = document.getElementById('tx_tcC')?.value||'blue';
+  const tcVK  = document.getElementById('tx_tcV')?.value||'mayorista';
+  let tcCVal  = parseFloat(document.getElementById('tx_tcCVal')?.value)||txGetTC(tcCK)||0;
+  let tcVVal  = parseFloat(document.getElementById('tx_tcVVal')?.value)||txGetTC(tcVK)||0;
+  // Autocompletar TC si vacío
+  if(!document.getElementById('tx_tcCVal')?.value && tcCVal)
+    document.getElementById('tx_tcCVal').value = tcCVal;
+  if(!document.getElementById('tx_tcVVal')?.value && tcVVal)
+    document.getElementById('tx_tcVVal').value = tcVVal;
+
+  const flete = parseFloat(document.getElementById('tx_flete')?.value)||0;
+  const fason = parseFloat(document.getElementById('tx_fason')?.value)||0;
+  const otros = parseFloat(document.getElementById('tx_otros')?.value)||0;
+  const ton   = parseFloat(document.getElementById('tx_ton')?.value)||0;
+
+  const prev = document.getElementById('txPreview');
+  const cont = document.getElementById('txPreviewContent');
+  if(!cUSD || !tcCVal){ if(prev) prev.style.display='none'; return; }
+
+  const costoUSD  = cUSD + flete + fason + otros;
+  const costoPesos = costoUSD * tcCVal;
+
+  let html = `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem">
+      <div style="color:var(--muted);font-size:.62rem">Costo total/Ton</div>
+      <div style="font-weight:700;color:var(--orange)">U$S ${costoUSD.toLocaleString('es-AR')}</div>
+      <div style="font-size:.68rem;color:var(--muted)">= ${txFmtP(costoPesos)}</div>
+    </div>`;
+
+  if(vUSD && tcVVal){
+    const ventaPesos = vUSD * tcVVal;
+    const difPesos   = ventaPesos - costoPesos;
+    const difUSD     = difPesos / tcVVal;
+    const pct        = costoPesos > 0 ? (difPesos/costoPesos)*100 : 0;
+    const cls        = difPesos>=0 ? '#2eb872' : '#d94f4f';
+    html += `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;padding-left:16px;border-left:2px solid ${cls}">
+      <div style="color:var(--muted);font-size:.62rem">Resultado/Ton</div>
+      <div style="font-weight:700;color:${cls}">${difPesos>=0?'+':''}${txFmtP(difPesos)}</div>
+      <div style="font-size:.68rem;color:${cls}">${difUSD>=0?'+':''}${txFmtU(difUSD)} · ${txFmtPct(pct)}</div>
+    </div>`;
+    if(ton){
+      html += `
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.8rem;padding-left:16px;border-left:2px solid ${cls}40">
+      <div style="color:var(--muted);font-size:.62rem">Total ${ton} Ton</div>
+      <div style="font-weight:800;font-size:.95rem;color:${cls}">${difPesos>=0?'+':''}${txFmtP(difPesos*ton)}</div>
+      <div style="font-size:.68rem;color:${cls}">${difUSD>=0?'+':''}${txFmtU(difUSD*ton)}</div>
+    </div>`;
+    }
+  }
+  if(prev){ prev.style.display=''; cont.innerHTML=html; }
+}
+
+function txOpenModal(id){
+  txEditId = id;
+  const modal = document.getElementById('txModal');
+  const title = document.getElementById('txModalTitle');
+  // Set defaults
+  const today = new Date().toISOString().slice(0,10);
+  const nowTime= new Date().toTimeString().slice(0,5);
+  document.getElementById('tx_fecha').value = today;
+  document.getElementById('tx_hora').value  = nowTime;
+  document.getElementById('tx_orden').value = '';
+  document.getElementById('tx_prov').value  = '';
+  document.getElementById('tx_comp').value  = '';
+  document.getElementById('tx_prod').value  = 'Aceite Soja Crudo';
+  document.getElementById('tx_ton').value   = '';
+  document.getElementById('tx_cUSD').value  = '';
+  document.getElementById('tx_tcC').value   = 'blue';
+  document.getElementById('tx_tcCVal').value= Math.round(txGetTC('blue'))||'';
+  document.getElementById('tx_flete').value = '';
+  document.getElementById('tx_fason').value = '';
+  document.getElementById('tx_otros').value = '';
+  document.getElementById('tx_vUSD').value  = '';
+  document.getElementById('tx_tcV').value   = 'mayorista';
+  document.getElementById('tx_tcVVal').value= Math.round(txGetTC('mayorista'))||'';
+  document.getElementById('tx_notas').value = '';
+  document.getElementById('txPreview').style.display = 'none';
+
+  if(id){
+    txLoad();
+    const r = txRows.find(x=>x.id===id);
+    if(r){
+      title.textContent = 'Editar Operación · ' + (r.orden||id);
+      document.getElementById('tx_fecha').value  = r.fecha||today;
+      document.getElementById('tx_hora').value   = r.hora||nowTime;
+      document.getElementById('tx_orden').value  = r.orden||'';
+      document.getElementById('tx_prov').value   = r.proveedor||'';
+      document.getElementById('tx_comp').value   = r.comprador||'';
+      document.getElementById('tx_prod').value   = r.producto||'Aceite Soja Crudo';
+      document.getElementById('tx_ton').value    = r.ton||'';
+      document.getElementById('tx_cUSD').value   = r.compraUSD||'';
+      document.getElementById('tx_tcC').value    = r.tcC||'blue';
+      document.getElementById('tx_tcCVal').value = r.tcCVal||'';
+      document.getElementById('tx_flete').value  = r.fleteUSD||'';
+      document.getElementById('tx_fason').value  = r.fasonUSD||'';
+      document.getElementById('tx_otros').value  = r.otrosUSD||'';
+      document.getElementById('tx_vUSD').value   = r.ventaUSD||'';
+      document.getElementById('tx_tcV').value    = r.tcV||'mayorista';
+      document.getElementById('tx_tcVVal').value = r.tcVVal||'';
+      document.getElementById('tx_notas').value  = r.notas||'';
+      txCalcPreview();
+    }
+  } else {
+    title.textContent = 'Nueva Operación';
+  }
+  modal.classList.add('open');
+}
+
+function txCloseModal(){
+  document.getElementById('txModal').classList.remove('open');
+  txEditId = null;
+}
+
+function txSave(){
+  const compraUSD = parseFloat(document.getElementById('tx_cUSD').value)||0;
+  if(!compraUSD){ alert('Ingresá el precio de compra.'); return; }
+  const tcCK   = document.getElementById('tx_tcC').value;
+  const tcVK   = document.getElementById('tx_tcV').value;
+  const tcCVal = parseFloat(document.getElementById('tx_tcCVal').value)||txGetTC(tcCK)||0;
+  const tcVVal = parseFloat(document.getElementById('tx_tcVVal').value)||txGetTC(tcVK)||0;
+  if(!tcCVal){ alert('Ingresá el valor del TC de compra.'); return; }
+
+  txLoad();
+  const rec = {
+    id:         txEditId || txGenId(),
+    orden:      document.getElementById('tx_orden').value.trim(),
+    fecha:      document.getElementById('tx_fecha').value,
+    hora:       document.getElementById('tx_hora').value,
+    producto:   document.getElementById('tx_prod').value,
+    ton:        parseFloat(document.getElementById('tx_ton').value)||0,
+    proveedor:  document.getElementById('tx_prov').value.trim(),
+    comprador:  document.getElementById('tx_comp').value.trim(),
+    compraUSD,
+    tcC:        tcCK,
+    tcCVal,
+    fleteUSD:   parseFloat(document.getElementById('tx_flete').value)||0,
+    fasonUSD:   parseFloat(document.getElementById('tx_fason').value)||0,
+    otrosUSD:   parseFloat(document.getElementById('tx_otros').value)||0,
+    ventaUSD:   parseFloat(document.getElementById('tx_vUSD').value)||0,
+    tcV:        tcVK,
+    tcVVal,
+    notas:      document.getElementById('tx_notas').value.trim(),
+  };
+  if(!rec.ventaUSD) rec.ventaUSD = 0;
+
+  if(txEditId){
+    const idx = txRows.findIndex(x=>x.id===txEditId);
+    if(idx>=0) txRows[idx]=rec; else txRows.push(rec);
+  } else {
+    txRows.unshift(rec);
+  }
+  txSaveLS();
+  txCloseModal();
+  txRender();
+}
+
+function txDelete(id){
+  if(!confirm('¿Eliminar esta operación? No se puede deshacer.')) return;
+  txLoad();
+  txRows = txRows.filter(x=>x.id!==id);
+  txSaveLS();
+  txRender();
+}
+
+function txExportCSV(){
+  txLoad();
+  if(!txRows.length){ alert('Sin operaciones para exportar.'); return; }
+  const hdr = ['Orden','Fecha','Hora','Producto','Proveedor','Comprador','Ton','Compra U$S/T','TC Compra','Val TC C','Flete U$S','Fazon U$S','Otros U$S','Venta U$S/T','TC Venta','Val TC V','Res $/T','Res U$S/T','Total $','Total U$S','%','Estado','Notas'];
+  const rows2 = txRows.map(r=>{
+    const c=txCalcRow(r);
+    return [
+      r.orden, r.fecha, r.hora, r.producto, r.proveedor, r.comprador, r.ton,
+      r.compraUSD, txTCLabel(r.tcC), r.tcCVal,
+      r.fleteUSD, r.fasonUSD, r.otrosUSD,
+      r.ventaUSD||'', txTCLabel(r.tcV), r.tcVVal,
+      c?.difPesos!=null?Math.round(c.difPesos):'',
+      c?.difUSD!=null?Math.round(c.difUSD):'',
+      (c?.difPesos!=null&&r.ton)?Math.round(c.difPesos*r.ton):'',
+      (c?.difUSD!=null&&r.ton)?Math.round(c.difUSD*r.ton):'',
+      c?.pct!=null?c.pct.toFixed(2)+'%':'',
+      !r.ventaUSD?'Pendiente':c?.pct>=0?'Ganancia':'Pérdida',
+      r.notas
+    ].map(v=>'"'+(v??'').toString().replace(/"/g,'""')+'"').join(',');
+  });
+  const blob=new Blob([[hdr.join(','),...rows2].join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+  a.download='operaciones_alborada_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+// ══════════════════════════════════════════════════════════
 
 </script>
 </body>
